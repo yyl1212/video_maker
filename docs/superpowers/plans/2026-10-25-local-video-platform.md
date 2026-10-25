@@ -76,17 +76,21 @@
 
 ### 任务 1：运行配置、数据库模型和项目剧集 API
 
+**M1审查补充：** `backend/app/local_http.py`及对应转发Host回归，确保后端能校验代理携带的原始地址。
+
 **新增文件：** `backend/pyproject.toml`、`backend/uv.lock`、`backend/alembic.ini`、`backend/migrations/env.py`、`backend/migrations/versions/0001_initial.py`；`backend/app/{__init__,main,config,db,errors}.py`；`backend/app/models/{__init__,project,episode,shot,asset,task,runtime,settings}.py`；`backend/app/schemas/{common,projects,episodes,tasks,clients}.py`；`backend/app/api/{bootstrap,projects,episodes,settings}.py`；`backend/app/services/projects.py`；`backend/tests/{conftest,test_schema,test_projects}.py`；`.gitignore`、`.env.example`、`scripts/run-check.py`。
 
 **接口：** `create_app(settings: AppSettings) -> FastAPI`；`session_scope() -> Session` 上下文；`ProjectService.create_project(data: ProjectCreate) -> ProjectRead`；`create_episode(project_id: int, data: EpisodeCreate) -> EpisodeRead`。提供设计中的 bootstrap/health、项目、剧集、设置读写 API；连接测试先不开放。
 
-- [ ] 核对依赖支持 Python 3.13/Node.js 24，确定并锁定版本；记录已验证 SDK 和 FFmpeg 可执行路径，不安装未使用框架。
-- [ ] 先写失败测试：`test_schema_has_no_fk_cycle`；`test_foreign_keys_enabled_on_every_connection`；`test_project_episode_scope_and_optimistic_version`；`test_empty_database_starts_without_old_project_files`；`test_checks_timeout_terminates_process_group`。断言新库可建可升、跨项目拒绝、过期版本409、有界测试能终止整个测试进程组。
-- [ ] 运行对应测试确认失败原因，然后只实现配置、完整初始表结构、迁移、项目/剧集服务、最小 API 和 540 秒测试包装器。不得引用旧项目目录作为运行依赖。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_schema.py tests/test_projects.py -q`。预期全通过；使用两次全新临时库运行迁移，确认 foreign_keys=ON、无外键环及活动唯一约束存在。
-- [ ] 代码审查并提交 `feat: add local project and episode foundation`。
+- [x] 核对依赖支持 Python 3.13/Node.js 24，确定并锁定版本；记录已验证 SDK 和 FFmpeg 可执行路径，不安装未使用框架。
+- [x] 先写失败测试：`test_schema_has_no_fk_cycle`；`test_foreign_keys_enabled_on_every_connection`；`test_project_episode_scope_and_optimistic_version`；`test_empty_database_starts_without_old_project_files`；`test_checks_timeout_terminates_process_group`。断言新库可建可升、跨项目拒绝、过期版本409、有界测试能终止整个测试进程组。
+- [x] 运行对应测试确认失败原因，然后只实现配置、完整初始表结构、迁移、项目/剧集服务、最小 API 和 540 秒测试包装器。不得引用旧项目目录作为运行依赖。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_schema.py tests/test_projects.py -q`。预期全通过；使用两次全新临时库运行迁移，确认 foreign_keys=ON、无外键环及活动唯一约束存在。
+- [x] 代码审查并提交 `feat: add local project and episode foundation`。
 
 ### 任务 2：前端基础与项目剧集页面
+
+**M1审查补充：** `frontend/src/proxy.ts`、`frontend/tests/local-host.test.ts`和`scripts/check-proxy-boundary.py`，覆盖真实Next→FastAPI入口；初始列表加载期间禁止创建，避免旧快照覆盖新项目。
 
 **新增文件：** `frontend/package.json`、`package-lock.json`、`tsconfig.json`、`next.config.ts`、`src/app/{layout,page,globals.css}`、`src/app/projects/[projectId]/page.tsx`、`src/app/projects/[projectId]/episodes/[episodeId]/page.tsx`；`src/features/projects/{ProjectList,ProjectForm,EpisodeForm}.tsx`；`src/lib/{api,api-types}.ts`；`src/stores/workbench.ts`；`frontend/tests/projects.test.tsx`；`scripts/export-openapi.py`。
 
@@ -94,11 +98,11 @@
 
 **产出：** `apiRequest<T>(path, options): Promise<T>`，统一令牌、错误和 AbortSignal；项目/剧集导航、版本保存、未保存编辑提示。所有 API 通过 Next.js rewrites 同源访问。
 
-- [ ] 先写 `projects.test.tsx`：创建项目后可新增剧集；切项目不串表单；409 保留编辑；前端不依赖远程字体/CDN。
-- [ ] 运行组件测试确认失败，再实现页面、中文字段和版本控制；初期首页明确显示模型功能尚未接入，不添加假生成按钮。
-- [ ] 从 OpenAPI 生成 api-types.ts，检查字段与后端同源；执行 `python scripts/run-check.py --cwd frontend -- npm run test -- projects`。
-- [ ] 执行 `python scripts/run-check.py --cwd frontend -- npm run typecheck` 和 `python scripts/run-check.py --cwd frontend -- npm run build`，预期均成功。
-- [ ] 审查并提交 `feat: add project and episode workspace`，演示空库创建项目/角色/剧集/剧本，等待 M1 确认。
+- [x] 先写 `projects.test.tsx`：创建项目后可新增剧集；切项目不串表单；409 保留编辑；前端不依赖远程字体/CDN。
+- [x] 运行组件测试确认失败，再实现页面、中文字段和版本控制；初期首页明确显示模型功能尚未接入，不添加假生成按钮。
+- [x] 从 OpenAPI 生成 api-types.ts，检查字段与后端同源；执行 `python scripts/run-check.py --cwd frontend -- npm run test -- projects`。
+- [x] 执行 `python scripts/run-check.py --cwd frontend -- npm run typecheck` 和 `python scripts/run-check.py --cwd frontend -- npm run build`，预期均成功。
+- [x] 审查并提交 `feat: add project and episode workspace`，演示空库创建项目/角色/剧集/剧本，等待 M1 确认。
 
 ## M2：单任务引擎、恢复与轮询
 

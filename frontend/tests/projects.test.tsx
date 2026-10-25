@@ -1,5 +1,11 @@
 import { beforeEach, expect, test, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProjectList } from "@/features/projects/ProjectList";
 import { ProjectForm } from "@/features/projects/ProjectForm";
@@ -171,4 +177,20 @@ test("冲突后明确核对最新内容，保留草稿并重新保存", async ()
   expect(onSaved).toHaveBeenCalledWith(
     expect.objectContaining({ name: "保留本页片名", version: 3 }),
   );
+});
+
+test("初始列表完成前不允许新建，旧快照不会覆盖创建结果", async () => {
+  let release: (response: Response) => void = () => {};
+  vi.mocked(fetch).mockImplementationOnce(
+    () =>
+      new Promise<Response>((resolve) => {
+        release = resolve;
+      }),
+  );
+  render(<ProjectList />);
+  expect(screen.getByRole("button", { name: "新建项目" })).toBeDisabled();
+  await act(async () => {
+    release(Response.json([]));
+  });
+  expect(screen.getByRole("button", { name: "新建项目" })).toBeEnabled();
 });

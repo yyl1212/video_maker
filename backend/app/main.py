@@ -3,7 +3,6 @@
 import logging
 import secrets
 from contextlib import asynccontextmanager
-from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -13,6 +12,7 @@ from .api import bootstrap, episodes, projects, settings
 from .config import AppSettings
 from .db import Database
 from .errors import AppError
+from .local_http import is_local_host
 from .schemas.common import ErrorRead
 
 logger = logging.getLogger(__name__)
@@ -52,11 +52,14 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
 
     @app.middleware("http")
     async def local_protection(request: Request, call_next):
-        try:
-            host = urlsplit("//" + request.headers.get("host", "")).hostname
-        except ValueError:
-            host = None
-        if host not in ("127.0.0.1", "localhost", "::1"):
+        hosts = request.headers.getlist("host")
+        forwarded = request.headers.getlist("x-forwarded-host")
+        # Next转发会改写Host，不能只校验改写后的后端地址。
+        if (
+            len(hosts) != 1
+            or not is_local_host(hosts[0])
+            or (forwarded and (len(forwarded) != 1 or not is_local_host(forwarded[0])))
+        ):
             return error_response(403, "LOCAL_ONLY", "请通过本机地址访问工作台")
         origin = request.headers.get("origin")
         if origin and origin not in config.frontend_origins:

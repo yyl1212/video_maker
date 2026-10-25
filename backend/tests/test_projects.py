@@ -270,3 +270,24 @@ def test_openapi_describes_the_actual_validation_error(client):
     assert documented["content"]["application/json"]["schema"]["$ref"].endswith(
         "/ErrorRead"
     )
+
+
+@pytest.mark.parametrize(
+    "forwarded",
+    [
+        "external.example:3000",
+        "localhost:3000, external.example",
+        "evil@localhost:3000",
+    ],
+)
+def test_forwarded_external_host_cannot_read_local_data(client, forwarded):
+    for endpoint in ("/api/v1/bootstrap", "/api/v1/projects", "/api/v1/episodes/1"):
+        response = client.get(
+            endpoint,
+            headers={
+                "X-Forwarded-Host": forwarded,
+                "Sec-Fetch-Site": "same-origin",
+            },
+        )
+        assert response.status_code == 403
+        assert set(response.json()) == {"error"}

@@ -46,6 +46,12 @@ python3 scripts/run-check.py --cwd frontend -- npm run lint
 python3 scripts/run-check.py --cwd frontend -- npm run build
 ```
 
+两个服务运行时，可额外验证真实代理链的本机来源边界：
+
+```bash
+python3 scripts/run-check.py -- python3 scripts/check-proxy-boundary.py
+```
+
 更新后端接口后，生成契约和前端类型，不必启动服务：
 
 ```bash

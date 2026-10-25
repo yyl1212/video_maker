@@ -30,6 +30,7 @@ export function ProjectList() {
         </div>
         <button
           className="button primary"
+          disabled={projects === null}
           onClick={() => setCreating(!creating)}
         >
           {creating ? "收起新建表单" : "新建项目"}

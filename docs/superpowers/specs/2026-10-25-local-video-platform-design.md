@@ -357,6 +357,8 @@ RawAVResult 以任务临时目录中的 RGB/PCM 文件路径和格式元数据�
 
 全部业务接口位于 `/api/v1`，下表省略前缀。写接口检查本机 Host、允许的同源 Origin、启动时会话令牌；上传为 multipart，其余写入为 JSON。不提供账号登录和跨站 CORS 通配。
 
+M1审查明确代理信任边界：Next.js在rewrites之前校验原始Host；FastAPI同时验证Host和X-Forwarded-Host，只接受规范回环地址及合法端口，拒绝多值转发链。不能仅依赖代理改写后的后端Host。
+
 | 接口 | 用途 |
 |---|---|
 | GET /bootstrap、GET /health | 会话令牌、能力、启动恢复及服务状态 |
