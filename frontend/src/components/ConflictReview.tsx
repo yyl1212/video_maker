@@ -3,7 +3,11 @@
 import { useState, type ReactNode } from "react";
 import { useFormAction } from "./useFormAction";
 
-type Snapshot = { version: number; archived_at: string | null };
+type Snapshot = {
+  version: number;
+  archived_at?: string | null;
+  read_only?: boolean;
+};
 type Props<T extends Snapshot> = {
   scope: string;
   load: (signal: AbortSignal) => Promise<T>;
@@ -42,7 +46,7 @@ export function ConflictReview<T extends Snapshot>({
           <p className="muted">
             上方的本页草稿保持不变。核对后，明确选择使用此版本作为下一次保存的基线。
           </p>
-          {current.archived_at ? (
+          {current.archived_at || current.read_only ? (
             <p className="notice">
               内容已在其他页面归档，请返回项目重新读取并恢复。
             </p>

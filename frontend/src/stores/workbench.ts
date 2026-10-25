@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Character } from "@/lib/api";
+import type { Character, ShotEditable, ReferenceInput } from "@/lib/api";
 
 export type ProjectDraft = {
   kind: "project";
@@ -13,7 +13,19 @@ export type EpisodeDraft = {
   baseVersion: number;
   dirty: boolean;
 };
-type EditorDraft = ProjectDraft | EpisodeDraft;
+export type ShotDraft = {
+  kind: "shot";
+  value: ShotEditable;
+  baseVersion: number;
+  dirty: boolean;
+};
+export type ReferenceDraft = {
+  kind: "references";
+  value: ReferenceInput[];
+  baseVersion: number;
+  dirty: boolean;
+};
+type EditorDraft = ProjectDraft | EpisodeDraft | ShotDraft | ReferenceDraft;
 type WorkbenchState = {
   drafts: Record<string, EditorDraft>;
   setDraft: (key: string, draft: EditorDraft) => void;

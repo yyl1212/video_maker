@@ -78,6 +78,15 @@ export function ProjectWorkspace({ projectId }: { projectId: number }) {
           {project.archived_at ? "恢复项目" : "归档项目"}
         </button>
       </header>
+      <div className="workspace-strip">
+        <span>项目素材集中管理，分镜按需引用。</span>
+        <Link
+          className="button secondary small"
+          href={`/projects/${projectId}/assets`}
+        >
+          打开资产库 →
+        </Link>
+      </div>
       {(action.error || action.message) && (
         <p
           role={action.error ? "alert" : "status"}

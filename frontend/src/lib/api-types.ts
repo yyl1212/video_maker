@@ -128,10 +128,244 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/projects/{project_id}/assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Assets */
+    get: operations["list_assets_api_v1_projects__project_id__assets_get"];
+    put?: never;
+    /** Upload Asset */
+    post: operations["upload_asset_api_v1_projects__project_id__assets_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assets/{asset_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete Asset */
+    delete: operations["delete_asset_api_v1_assets__asset_id__delete"];
+    options?: never;
+    head?: never;
+    /** Update Asset */
+    patch: operations["update_asset_api_v1_assets__asset_id__patch"];
+    trace?: never;
+  };
+  "/api/v1/assets/{asset_id}/content": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Content */
+    get: operations["content_api_v1_assets__asset_id__content_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assets/{asset_id}/thumbnail": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Thumbnail */
+    get: operations["thumbnail_api_v1_assets__asset_id__thumbnail_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/episodes/{episode_id}/shots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Shots */
+    get: operations["list_shots_api_v1_episodes__episode_id__shots_get"];
+    put?: never;
+    /** Create Shot */
+    post: operations["create_shot_api_v1_episodes__episode_id__shots_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Shot */
+    get: operations["get_shot_api_v1_shots__shot_id__get"];
+    put?: never;
+    post?: never;
+    /** Delete Shot */
+    delete: operations["delete_shot_api_v1_shots__shot_id__delete"];
+    options?: never;
+    head?: never;
+    /** Update Shot */
+    patch: operations["update_shot_api_v1_shots__shot_id__patch"];
+    trace?: never;
+  };
+  "/api/v1/episodes/{episode_id}/shots/reorder": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reorder Shots */
+    post: operations["reorder_shots_api_v1_episodes__episode_id__shots_reorder_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}/references": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** References */
+    put: operations["references_api_v1_shots__shot_id__references_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}/selection": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Selection */
+    put: operations["selection_api_v1_shots__shot_id__selection_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** AssetPatch */
+    AssetPatch: {
+      /** Expected Version */
+      expected_version: number;
+      /** Name */
+      name?: string | null;
+      /** Tags */
+      tags?:
+        | ("reference" | "character" | "scene" | "first_frame" | "video_clip")[]
+        | null;
+    };
+    /** AssetRead */
+    AssetRead: {
+      /** Id */
+      id: number;
+      /** Version */
+      version: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Project Id */
+      project_id: number;
+      /** Shot Id */
+      shot_id: number | null;
+      /** Source Task Id */
+      source_task_id: number | null;
+      /**
+       * Type
+       * @enum {string}
+       */
+      type: "image" | "video";
+      /** Tags */
+      tags: string[];
+      /** Name */
+      name: string;
+      /** File Path */
+      file_path: string;
+      /** Thumbnail Path */
+      thumbnail_path: string | null;
+      /** Sha256 */
+      sha256: string;
+      /** Size Bytes */
+      size_bytes: number;
+      /** Mime Type */
+      mime_type: string;
+      /** Width */
+      width: number;
+      /** Height */
+      height: number;
+      /** Duration Seconds */
+      duration_seconds: number | null;
+      /** Has Audio */
+      has_audio: boolean;
+      /** Audio Sample Rate */
+      audio_sample_rate: number | null;
+      /** Audio Channels */
+      audio_channels: number | null;
+      /** Metadata Json */
+      metadata_json: {
+        [key: string]: unknown;
+      };
+      /** Deleted At */
+      deleted_at: string | null;
+    };
+    /** Body_upload_asset_api_v1_projects__project_id__assets_post */
+    Body_upload_asset_api_v1_projects__project_id__assets_post: {
+      /** File */
+      file: string;
+    };
     /** BootstrapRead */
     BootstrapRead: {
       /** Token */
@@ -143,12 +377,14 @@ export interface components {
       version: string;
       /**
        * Module
-       * @default M1
+       * @default M3
        */
       module: string;
       /**
        * @default {
        *       "projects": true,
+       *       "assets": true,
+       *       "shots": true,
        *       "generation": false
        *     }
        */
@@ -161,6 +397,16 @@ export interface components {
        * @default true
        */
       projects: boolean;
+      /**
+       * Assets
+       * @default true
+       */
+      assets: boolean;
+      /**
+       * Shots
+       * @default true
+       */
+      shots: boolean;
       /**
        * Generation
        * @default false
@@ -178,6 +424,11 @@ export interface components {
        * @default
        */
       description: string;
+    };
+    /** DeleteAsset */
+    DeleteAsset: {
+      /** Expected Version */
+      expected_version: number;
     };
     /** EpisodeCreate */
     EpisodeCreate: {
@@ -245,7 +496,7 @@ export interface components {
       status: string;
       /**
        * Module
-       * @default M1
+       * @default M3
        */
       module: string;
     };
@@ -358,6 +609,70 @@ export interface components {
       /** Archived At */
       archived_at: string | null;
     };
+    /** ReferenceInput */
+    ReferenceInput: {
+      /** Asset Id */
+      asset_id: number;
+      /**
+       * Role
+       * @default other
+       * @enum {string}
+       */
+      role: "character" | "scene" | "other";
+    };
+    /** ReferenceRead */
+    ReferenceRead: {
+      /** Asset Id */
+      asset_id: number;
+      /** Role */
+      role: string;
+      /** Position */
+      position: number;
+    };
+    /** ReferencesUpdate */
+    ReferencesUpdate: {
+      /** Expected Version */
+      expected_version: number;
+      /** References */
+      references: components["schemas"]["ReferenceInput"][];
+    };
+    /** SelectionRead */
+    SelectionRead: {
+      /** Version */
+      version: number;
+      /** First Frame Asset Id */
+      first_frame_asset_id: number | null;
+      /** Selected Video Asset Id */
+      selected_video_asset_id: number | null;
+      /** First Frame Stale */
+      first_frame_stale: boolean;
+      /** Video Stale */
+      video_stale: boolean;
+      /** First Frame Issue */
+      first_frame_issue: string | null;
+      /** Video Issue */
+      video_issue: string | null;
+    };
+    /** SelectionUpdate */
+    SelectionUpdate: {
+      /** Shot Version */
+      shot_version: number;
+      /** Selection Version */
+      selection_version: number;
+      /** First Frame Asset Id */
+      first_frame_asset_id?: number | null;
+      /** Selected Video Asset Id */
+      selected_video_asset_id?: number | null;
+      /**
+       * Confirm Uploaded
+       * @default false
+       */
+      confirm_uploaded: boolean;
+      /** Expected Image Input Hash */
+      expected_image_input_hash?: string | null;
+      /** Expected Video Input Hash */
+      expected_video_input_hash?: string | null;
+    };
     /** SettingsRead */
     SettingsRead: {
       /** Version */
@@ -373,6 +688,206 @@ export interface components {
       text: components["schemas"]["TextSettings"];
       image: components["schemas"]["ImageSettings"];
       video: components["schemas"]["VideoSettings"];
+    };
+    /** ShotCreate */
+    ShotCreate: {
+      /**
+       * Raw Description
+       * @default
+       */
+      raw_description: string;
+      /**
+       * Dialogue
+       * @default
+       */
+      dialogue: string;
+      /** Character Ids */
+      character_ids?: string[];
+      /**
+       * Image Prompt
+       * @default
+       */
+      image_prompt: string;
+      /**
+       * Video Prompt
+       * @default
+       */
+      video_prompt: string;
+      /**
+       * Audio Prompt
+       * @default
+       */
+      audio_prompt: string;
+      /**
+       * Duration Seconds
+       * @default 5
+       */
+      duration_seconds: number;
+      image_settings?: components["schemas"]["ShotImageSettings"];
+      video_settings?: components["schemas"]["ShotVideoSettings"];
+    };
+    /** ShotDelete */
+    ShotDelete: {
+      /** Expected Version */
+      expected_version: number;
+    };
+    /** ShotImageSettings */
+    ShotImageSettings: {
+      /** Model */
+      model?: string | null;
+      /** Width */
+      width?: number | null;
+      /** Height */
+      height?: number | null;
+      /** Steps */
+      steps?: number | null;
+      /** Guidance Scale */
+      guidance_scale?: number | null;
+      /** Seed */
+      seed?: number | null;
+      /** Negative Prompt */
+      negative_prompt?: string | null;
+    };
+    /** ShotListRead */
+    ShotListRead: {
+      /** Episode Version */
+      episode_version: number;
+      /** Shots */
+      shots: components["schemas"]["ShotRead"][];
+    };
+    /** ShotPatch */
+    ShotPatch: {
+      /**
+       * Raw Description
+       * @default
+       */
+      raw_description: string;
+      /**
+       * Dialogue
+       * @default
+       */
+      dialogue: string;
+      /** Character Ids */
+      character_ids?: string[];
+      /**
+       * Image Prompt
+       * @default
+       */
+      image_prompt: string;
+      /**
+       * Video Prompt
+       * @default
+       */
+      video_prompt: string;
+      /**
+       * Audio Prompt
+       * @default
+       */
+      audio_prompt: string;
+      /**
+       * Duration Seconds
+       * @default 5
+       */
+      duration_seconds: number;
+      image_settings?: components["schemas"]["ShotImageSettings"];
+      video_settings?: components["schemas"]["ShotVideoSettings"];
+      /** Expected Version */
+      expected_version: number;
+    };
+    /** ShotRead */
+    ShotRead: {
+      /** Id */
+      id: number;
+      /** Version */
+      version: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Episode Id */
+      episode_id: number;
+      /** Order Index */
+      order_index: number;
+      /** Raw Description */
+      raw_description: string;
+      /** Dialogue */
+      dialogue: string;
+      /** Character Ids */
+      character_ids: string[];
+      /** Image Prompt */
+      image_prompt: string;
+      /** Video Prompt */
+      video_prompt: string;
+      /** Audio Prompt */
+      audio_prompt: string;
+      /** Duration Seconds */
+      duration_seconds: number;
+      /** Actual Duration Seconds */
+      actual_duration_seconds: number;
+      /** Image Settings */
+      image_settings: {
+        [key: string]: unknown;
+      };
+      /** Video Settings */
+      video_settings: {
+        [key: string]: unknown;
+      };
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "DRAFT" | "READY";
+      /** Deleted At */
+      deleted_at: string | null;
+      /** References */
+      references: components["schemas"]["ReferenceRead"][];
+      /** Reference Asset Ids */
+      reference_asset_ids: number[];
+      selection: components["schemas"]["SelectionRead"];
+      /** Image Input Hash */
+      image_input_hash: string;
+      /** Video Input Hash */
+      video_input_hash: string | null;
+      /** Video Ready */
+      video_ready: boolean;
+      /** Configuration Errors */
+      configuration_errors: string[];
+      /** Compiled Image Prompt */
+      compiled_image_prompt: string;
+      /** Compiled Video Prompt */
+      compiled_video_prompt: string;
+      /** Read Only */
+      read_only: boolean;
+    };
+    /** ShotReorder */
+    ShotReorder: {
+      /** Expected Version */
+      expected_version: number;
+      /** Shot Ids */
+      shot_ids: number[];
+    };
+    /** ShotVideoSettings */
+    ShotVideoSettings: {
+      /**
+       * Width
+       * @default 384
+       */
+      width: number;
+      /**
+       * Height
+       * @default 672
+       */
+      height: number;
+      /** Preset */
+      preset?: ("quality" | "fast") | null;
+      /** Seed */
+      seed?: number | null;
     };
     /** TextSettings */
     TextSettings: {
@@ -465,6 +980,15 @@ export interface operations {
           "application/json": components["schemas"]["ErrorRead"];
         };
       };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
       /** @description Unsupported Media Type */
       415: {
         headers: {
@@ -548,6 +1072,15 @@ export interface operations {
           "application/json": components["schemas"]["ErrorRead"];
         };
       };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
       /** @description Unsupported Media Type */
       415: {
         headers: {
@@ -624,6 +1157,15 @@ export interface operations {
       };
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
         headers: {
           [name: string]: unknown;
         };
@@ -718,6 +1260,15 @@ export interface operations {
           "application/json": components["schemas"]["ErrorRead"];
         };
       };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
       /** @description Unsupported Media Type */
       415: {
         headers: {
@@ -796,6 +1347,15 @@ export interface operations {
       };
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
         headers: {
           [name: string]: unknown;
         };
@@ -892,6 +1452,15 @@ export interface operations {
           "application/json": components["schemas"]["ErrorRead"];
         };
       };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
       /** @description Unsupported Media Type */
       415: {
         headers: {
@@ -970,6 +1539,15 @@ export interface operations {
       };
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
         headers: {
           [name: string]: unknown;
         };
@@ -1066,6 +1644,15 @@ export interface operations {
           "application/json": components["schemas"]["ErrorRead"];
         };
       };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
       /** @description Unsupported Media Type */
       415: {
         headers: {
@@ -1144,6 +1731,15 @@ export interface operations {
       };
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
         headers: {
           [name: string]: unknown;
         };
@@ -1240,6 +1836,15 @@ export interface operations {
           "application/json": components["schemas"]["ErrorRead"];
         };
       };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
       /** @description Unsupported Media Type */
       415: {
         headers: {
@@ -1316,6 +1921,15 @@ export interface operations {
       };
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
         headers: {
           [name: string]: unknown;
         };
@@ -1403,6 +2017,1372 @@ export interface operations {
       };
       /** @description Conflict */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  list_assets_api_v1_projects__project_id__assets_get: {
+    parameters: {
+      query?: {
+        type?: ("image" | "video") | null;
+        tag?: string | null;
+        shot_id?: number | null;
+      };
+      header?: never;
+      path: {
+        project_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetRead"][];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  upload_asset_api_v1_projects__project_id__assets_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        project_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_asset_api_v1_projects__project_id__assets_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  delete_asset_api_v1_assets__asset_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        asset_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeleteAsset"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  update_asset_api_v1_assets__asset_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        asset_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssetPatch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  content_api_v1_assets__asset_id__content_get: {
+    parameters: {
+      query: {
+        project_id: number;
+        download?: boolean;
+      };
+      header?: never;
+      path: {
+        asset_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  thumbnail_api_v1_assets__asset_id__thumbnail_get: {
+    parameters: {
+      query: {
+        project_id: number;
+      };
+      header?: never;
+      path: {
+        asset_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  list_shots_api_v1_episodes__episode_id__shots_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episode_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotListRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  create_shot_api_v1_episodes__episode_id__shots_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episode_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShotCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  get_shot_api_v1_shots__shot_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  delete_shot_api_v1_shots__shot_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShotDelete"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  update_shot_api_v1_shots__shot_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShotPatch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  reorder_shots_api_v1_episodes__episode_id__shots_reorder_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episode_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShotReorder"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"][];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  references_api_v1_shots__shot_id__references_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReferencesUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  selection_api_v1_shots__shot_id__selection_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SelectionUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
         headers: {
           [name: string]: unknown;
         };

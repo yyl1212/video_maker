@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { apiRequest, type EpisodeRead, type ProjectRead } from "@/lib/api";
 import { useFormAction } from "@/components/useFormAction";
 import { EpisodeForm } from "./EpisodeForm";
+import { ShotList } from "@/features/shots/ShotList";
 
 export function EpisodeWorkspace({
   projectId,
@@ -16,6 +17,13 @@ export function EpisodeWorkspace({
   const [episode, setEpisode] = useState<EpisodeRead | null>(null);
   const [project, setProject] = useState<ProjectRead | null>(null);
   const [error, setError] = useState("");
+  const refresh = useFormAction<{ episode: EpisodeRead; project: ProjectRead }>(
+    `episode-refresh:${episodeId}`,
+    (result) => {
+      setEpisode(result.episode);
+      setProject(result.project);
+    },
+  );
   const action = useFormAction<EpisodeRead>(
     `archive-episode:${episodeId}`,
     setEpisode,
@@ -115,12 +123,31 @@ export function EpisodeWorkspace({
             <li>保留对白的原始语言。</li>
           </ol>
           <div className="stage-note">
-            当前可用：剧本保存
+            当前可用：剧本保存、分镜编排、参考绑定
             <br />
-            分镜、生成与导出将按后续迭代接入。
+            在下方工作台逐镜编辑，生成与导出随后接入。
           </div>
         </aside>
       </div>
+      {refresh.error && (
+        <p role="alert" className="notice error">
+          {refresh.error}
+        </p>
+      )}
+      <ShotList
+        project={project}
+        episodeId={episodeId}
+        readonly={Boolean(project.archived_at || episode.archived_at)}
+        onEpisodeChanged={() =>
+          void refresh.run(async (signal) => {
+            const [item, current] = await Promise.all([
+              apiRequest<EpisodeRead>(`/episodes/${episodeId}`, { signal }),
+              apiRequest<ProjectRead>(`/projects/${projectId}`, { signal }),
+            ]);
+            return { episode: item, project: current };
+          }, "剧集版本已同步")
+        }
+      />
     </>
   );
 }
