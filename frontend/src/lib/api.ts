@@ -5,6 +5,7 @@ export type EpisodeRead = components["schemas"]["EpisodeRead"];
 export type Character = components["schemas"]["Character"];
 export type ProjectCreate = components["schemas"]["ProjectCreate"];
 export type EpisodeCreate = components["schemas"]["EpisodeCreate"];
+export type AssetRead = components["schemas"]["AssetRead"];
 
 let sessionPromise: Promise<string> | null = null;
 
@@ -31,7 +32,8 @@ export async function apiRequest<T>(
   const headers: Record<string, string> = {};
   const write = method !== "GET" && method !== "HEAD";
   if (write) {
-    headers["Content-Type"] = "application/json";
+    if (!(options.body instanceof FormData))
+      headers["Content-Type"] = "application/json";
     headers["X-Local-Token"] = await sessionToken();
   }
   options.signal?.throwIfAborted();
@@ -40,7 +42,14 @@ export async function apiRequest<T>(
     headers,
     signal: options.signal,
     cache: "no-store",
-    ...(write ? { body: JSON.stringify(options.body ?? {}) } : {}),
+    ...(write
+      ? {
+          body:
+            options.body instanceof FormData
+              ? options.body
+              : JSON.stringify(options.body ?? {}),
+        }
+      : {}),
   });
   const payload: unknown = await response.json().catch(() => null);
   if (!response.ok) {

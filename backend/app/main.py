@@ -1,4 +1,4 @@
-"""M1只提供项目配置，不注册尚未实现的生成入口。"""
+"""本机项目、资产及分镜API；模型生成按后续迭代接入。"""
 
 import logging
 import secrets
@@ -7,13 +7,17 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy import select
 
-from .api import bootstrap, episodes, projects, settings
+from .api import assets, bootstrap, episodes, projects, settings
 from .config import AppSettings
 from .db import Database
 from .errors import AppError
 from .local_http import is_local_host
+from .models import Asset
 from .schemas.common import ErrorRead
+from .services.storage import StorageService
+from .upload_limit import UploadBodyLimit, is_upload_request
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +37,14 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
         try:
             database.initialize()
             app.state.database = database
+            app.state.storage = StorageService(config.data_dir)
+            with database.session_scope() as session:
+                registered = set()
+                for asset in session.scalars(select(Asset)):
+                    registered.add(asset.file_path)
+                    if asset.thumbnail_path:
+                        registered.add(asset.thumbnail_path)
+            app.state.storage.quarantine_orphans(registered)
             yield
         finally:
             database.close()
@@ -45,10 +57,11 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
         redoc_url=None,
         responses={
             status: {"model": ErrorRead}
-            for status in (403, 404, 409, 415, 422, 500, 503)
+            for status in (403, 404, 409, 413, 415, 422, 500, 503)
         },
     )
     app.state.token = secrets.token_urlsafe(32)
+    app.add_middleware(UploadBodyLimit)
 
     @app.middleware("http")
     async def local_protection(request: Request, call_next):
@@ -72,10 +85,9 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
                 return error_response(
                     403, "SESSION_EXPIRED", "页面会话已失效，请刷新后重试"
                 )
-            if (
-                request.headers.get("content-type", "").split(";")[0]
-                != "application/json"
-            ):
+            upload = is_upload_request(request.method, request.url.path)
+            expected = "multipart/form-data" if upload else "application/json"
+            if request.headers.get("content-type", "").split(";")[0] != expected:
                 return error_response(415, "JSON_REQUIRED", "请使用JSON提交表单")
         response = await call_next(request)
         response.headers["Cache-Control"] = "no-store"
@@ -97,6 +109,12 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
         logger.error("请求未完成，异常类型：%s", type(error).__name__)
         return error_response(500, "INTERNAL_ERROR", "操作未完成，请稍后重试")
 
-    for router in (bootstrap.router, projects.router, episodes.router, settings.router):
+    for router in (
+        bootstrap.router,
+        projects.router,
+        episodes.router,
+        settings.router,
+        assets.router,
+    ):
         app.include_router(router, prefix="/api/v1")
     return app
