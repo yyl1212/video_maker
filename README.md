@@ -6,6 +6,7 @@
 
 - [完整产品、架构与数据模型设计](docs/superpowers/specs/2026-10-25-local-video-platform-design.md)
 - [分阶段开发计划与验收标准](docs/superpowers/plans/2026-10-25-local-video-platform.md)
+- [敏捷迭代、待办和当前进度](docs/superpowers/plans/2026-10-25-agile-delivery.md)
 
 已确认边界：从空数据开始、不迁移旧 DrawThings 数据；可复用已验证的模型接入协议；全局单任务、BackgroundTasks 后台执行、轮询进度；不依赖云服务，不做内存检测，不自动卸载或恢复其他模型。
 
