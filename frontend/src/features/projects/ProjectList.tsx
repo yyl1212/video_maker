@@ -41,7 +41,7 @@ export function ProjectList() {
         本机工作区
         <span className="strip-divider" />
         {projects?.filter((p) => !p.archived_at).length ?? 0} 个进行中项目
-        <span className="muted ml-auto">当前可用 · 项目、分镜与首帧</span>
+        <span className="muted ml-auto">当前可用 · 分镜、首帧与音画</span>
       </div>
       {creating && (
         <section className="panel new-project">
@@ -112,7 +112,7 @@ export function ProjectList() {
         </section>
       )}
       <footer className="page-note">
-        定义故事、整理参考素材，在分镜工作台逐镜生成并采用首帧。
+        定义故事、整理参考素材，在分镜工作台逐镜生成首帧和有声视频。
       </footer>
     </>
   );

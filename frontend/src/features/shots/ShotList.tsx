@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import { useWorkbenchStore } from "@/stores/workbench";
 import { useFormAction } from "@/components/useFormAction";
+import { VideoGenerationPanel } from "./VideoGenerationPanel";
 import { ImageGenerationPanel } from "./ImageGenerationPanel";
 import { ShotEditor } from "./ShotEditor";
 import { ReferencePicker } from "./ReferencePicker";
@@ -285,6 +286,24 @@ export function ShotList({
                     ]);
                     return { list, assets: refreshedAssets };
                   }, "已刷新首帧历史与输入")
+                }
+              />
+              <VideoGenerationPanel
+                key={`video-generate:${active.id}`}
+                shot={{ ...active, read_only: readonly || active.read_only }}
+                project={project}
+                episodeVersion={listing.episode_version}
+                onCompleted={() =>
+                  void refresh.run(async (signal) => {
+                    const [list, refreshedAssets] = await Promise.all([
+                      reload(signal),
+                      apiRequest<AssetRead[]>(
+                        `/projects/${project.id}/assets`,
+                        { signal },
+                      ),
+                    ]);
+                    return { list, assets: refreshedAssets };
+                  }, "已刷新有声视频历史与输入")
                 }
               />
               <SelectionPanel

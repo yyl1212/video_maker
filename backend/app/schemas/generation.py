@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from .clients import ImageSettings
+from .clients import ImageSettings, VideoSettings
 from .common import InputModel, Version
 
 
@@ -18,3 +18,16 @@ class ImageJobSubmit(InputModel):
 
 class ConnectionTest(InputModel):
     image: ImageSettings
+
+
+class VideoJobSubmit(InputModel):
+    idempotency_key: UUID
+    expected_project_version: Version
+    expected_episode_version: Version
+    expected_shot_version: Version
+    expected_selection_version: Version
+    expected_video_input_hash: str = Field(pattern="^[0-9a-f]{64}$")
+
+
+class VideoConnectionTest(InputModel):
+    video: VideoSettings

@@ -145,6 +145,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/settings/test-video-connection": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Test Video Connection */
+    post: operations["test_video_connection_api_v1_settings_test_video_connection_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/projects/{project_id}/assets": {
     parameters: {
       query?: never;
@@ -314,6 +331,23 @@ export interface paths {
     put?: never;
     /** Generate Image */
     post: operations["generate_image_api_v1_shots__shot_id__image_jobs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}/video-jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Generate Video */
+    post: operations["generate_video_api_v1_shots__shot_id__video_jobs_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -501,7 +535,7 @@ export interface components {
       version: string;
       /**
        * Module
-       * @default M5
+       * @default M6
        */
       module: string;
       /**
@@ -632,7 +666,7 @@ export interface components {
       status: string;
       /**
        * Module
-       * @default M5
+       * @default M6
        */
       module: string;
     };
@@ -1223,6 +1257,40 @@ export interface components {
        * @default
        */
       model: string;
+    };
+    /** VideoConnectionRead */
+    VideoConnectionRead: {
+      /** Model */
+      model: string;
+      /** State */
+      state: string;
+      /**
+       * Message
+       * @default 已连接本机H3音画模型；未执行生成
+       */
+      message: string;
+    };
+    /** VideoConnectionTest */
+    VideoConnectionTest: {
+      video: components["schemas"]["VideoSettings"];
+    };
+    /** VideoJobSubmit */
+    VideoJobSubmit: {
+      /**
+       * Idempotency Key
+       * Format: uuid
+       */
+      idempotency_key: string;
+      /** Expected Project Version */
+      expected_project_version: number;
+      /** Expected Episode Version */
+      expected_episode_version: number;
+      /** Expected Shot Version */
+      expected_shot_version: number;
+      /** Expected Selection Version */
+      expected_selection_version: number;
+      /** Expected Video Input Hash */
+      expected_video_input_hash: string;
     };
     /** VideoSettings */
     VideoSettings: {
@@ -2521,6 +2589,111 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ImageConnectionRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  test_video_connection_api_v1_settings_test_video_connection_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["VideoConnectionTest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["VideoConnectionRead"];
         };
       };
       /** @description Forbidden */
@@ -4101,6 +4274,113 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["ImageJobSubmit"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskAccepted"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  generate_video_api_v1_shots__shot_id__video_jobs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["VideoJobSubmit"];
       };
     };
     responses: {

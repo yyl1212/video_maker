@@ -1,4 +1,4 @@
-"""本机项目、资产、分镜及异步首帧API。"""
+"""本机制作工作台及首帧/H3原生音画异步任务。"""
 
 import asyncio
 import logging
@@ -17,7 +17,7 @@ from .errors import AppError
 from .local_http import is_local_host
 from .models import Asset
 from .schemas.common import ErrorRead
-from .services.generation import ImageGenerationHandler
+from .services.generation import ImageGenerationHandler, VideoGenerationHandler
 from .services.recovery import RecoveryService, WorkspaceLock
 from .services.storage import StorageService
 from .services.tasks import TaskService
@@ -51,7 +51,10 @@ def create_app(
                 database,
                 app.state.storage,
                 (
-                    {"IMAGE": ImageGenerationHandler(database, app.state.storage)}
+                    {
+                        "IMAGE": ImageGenerationHandler(database, app.state.storage),
+                        "VIDEO": VideoGenerationHandler(database, app.state.storage),
+                    }
                     if task_handlers is None
                     else task_handlers
                 ),
