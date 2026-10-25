@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AssetLibrary } from "@/features/assets/AssetLibrary";
 import { AssetUpload } from "@/features/assets/AssetUpload";
+import { MediaPreview } from "@/features/assets/MediaPreview";
 
 export const asset = {
   id: 4,
@@ -90,4 +91,11 @@ test("导入失败保留已选文件并显示错误", async () => {
   fireEvent.click(screen.getByRole("button", { name: "导入素材" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("图片损坏");
   expect(input.files).toHaveLength(1);
+});
+
+test("媒体文件失效时显示可操作错误，仍能下载排查", () => {
+  render(<MediaPreview asset={asset} />);
+  fireEvent.error(screen.getByAltText(asset.name));
+  expect(screen.getByRole("alert")).toHaveTextContent("素材无法预览");
+  expect(screen.getByRole("link", { name: "下载素材" })).toBeVisible();
 });

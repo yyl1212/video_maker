@@ -198,6 +198,94 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/episodes/{episode_id}/shots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Shots */
+    get: operations["list_shots_api_v1_episodes__episode_id__shots_get"];
+    put?: never;
+    /** Create Shot */
+    post: operations["create_shot_api_v1_episodes__episode_id__shots_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Shot */
+    get: operations["get_shot_api_v1_shots__shot_id__get"];
+    put?: never;
+    post?: never;
+    /** Delete Shot */
+    delete: operations["delete_shot_api_v1_shots__shot_id__delete"];
+    options?: never;
+    head?: never;
+    /** Update Shot */
+    patch: operations["update_shot_api_v1_shots__shot_id__patch"];
+    trace?: never;
+  };
+  "/api/v1/episodes/{episode_id}/shots/reorder": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reorder Shots */
+    post: operations["reorder_shots_api_v1_episodes__episode_id__shots_reorder_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}/references": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** References */
+    put: operations["references_api_v1_shots__shot_id__references_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}/selection": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Selection */
+    put: operations["selection_api_v1_shots__shot_id__selection_put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -289,12 +377,14 @@ export interface components {
       version: string;
       /**
        * Module
-       * @default M1
+       * @default M3
        */
       module: string;
       /**
        * @default {
        *       "projects": true,
+       *       "assets": true,
+       *       "shots": true,
        *       "generation": false
        *     }
        */
@@ -307,6 +397,16 @@ export interface components {
        * @default true
        */
       projects: boolean;
+      /**
+       * Assets
+       * @default true
+       */
+      assets: boolean;
+      /**
+       * Shots
+       * @default true
+       */
+      shots: boolean;
       /**
        * Generation
        * @default false
@@ -396,7 +496,7 @@ export interface components {
       status: string;
       /**
        * Module
-       * @default M1
+       * @default M3
        */
       module: string;
     };
@@ -509,6 +609,66 @@ export interface components {
       /** Archived At */
       archived_at: string | null;
     };
+    /** ReferenceInput */
+    ReferenceInput: {
+      /** Asset Id */
+      asset_id: number;
+      /**
+       * Role
+       * @default other
+       * @enum {string}
+       */
+      role: "character" | "scene" | "other";
+    };
+    /** ReferenceRead */
+    ReferenceRead: {
+      /** Asset Id */
+      asset_id: number;
+      /** Role */
+      role: string;
+      /** Position */
+      position: number;
+    };
+    /** ReferencesUpdate */
+    ReferencesUpdate: {
+      /** Expected Version */
+      expected_version: number;
+      /** References */
+      references: components["schemas"]["ReferenceInput"][];
+    };
+    /** SelectionRead */
+    SelectionRead: {
+      /** Version */
+      version: number;
+      /** First Frame Asset Id */
+      first_frame_asset_id: number | null;
+      /** Selected Video Asset Id */
+      selected_video_asset_id: number | null;
+      /** First Frame Stale */
+      first_frame_stale: boolean;
+      /** Video Stale */
+      video_stale: boolean;
+      /** First Frame Issue */
+      first_frame_issue: string | null;
+      /** Video Issue */
+      video_issue: string | null;
+    };
+    /** SelectionUpdate */
+    SelectionUpdate: {
+      /** Shot Version */
+      shot_version: number;
+      /** Selection Version */
+      selection_version: number;
+      /** First Frame Asset Id */
+      first_frame_asset_id?: number | null;
+      /** Selected Video Asset Id */
+      selected_video_asset_id?: number | null;
+      /**
+       * Confirm Uploaded
+       * @default false
+       */
+      confirm_uploaded: boolean;
+    };
     /** SettingsRead */
     SettingsRead: {
       /** Version */
@@ -524,6 +684,206 @@ export interface components {
       text: components["schemas"]["TextSettings"];
       image: components["schemas"]["ImageSettings"];
       video: components["schemas"]["VideoSettings"];
+    };
+    /** ShotCreate */
+    ShotCreate: {
+      /**
+       * Raw Description
+       * @default
+       */
+      raw_description: string;
+      /**
+       * Dialogue
+       * @default
+       */
+      dialogue: string;
+      /** Character Ids */
+      character_ids?: string[];
+      /**
+       * Image Prompt
+       * @default
+       */
+      image_prompt: string;
+      /**
+       * Video Prompt
+       * @default
+       */
+      video_prompt: string;
+      /**
+       * Audio Prompt
+       * @default
+       */
+      audio_prompt: string;
+      /**
+       * Duration Seconds
+       * @default 5
+       */
+      duration_seconds: number;
+      image_settings?: components["schemas"]["ShotImageSettings"];
+      video_settings?: components["schemas"]["ShotVideoSettings"];
+    };
+    /** ShotDelete */
+    ShotDelete: {
+      /** Expected Version */
+      expected_version: number;
+    };
+    /** ShotImageSettings */
+    ShotImageSettings: {
+      /** Model */
+      model?: string | null;
+      /** Width */
+      width?: number | null;
+      /** Height */
+      height?: number | null;
+      /** Steps */
+      steps?: number | null;
+      /** Guidance Scale */
+      guidance_scale?: number | null;
+      /** Seed */
+      seed?: number | null;
+      /** Negative Prompt */
+      negative_prompt?: string | null;
+    };
+    /** ShotListRead */
+    ShotListRead: {
+      /** Episode Version */
+      episode_version: number;
+      /** Shots */
+      shots: components["schemas"]["ShotRead"][];
+    };
+    /** ShotPatch */
+    ShotPatch: {
+      /**
+       * Raw Description
+       * @default
+       */
+      raw_description: string;
+      /**
+       * Dialogue
+       * @default
+       */
+      dialogue: string;
+      /** Character Ids */
+      character_ids?: string[];
+      /**
+       * Image Prompt
+       * @default
+       */
+      image_prompt: string;
+      /**
+       * Video Prompt
+       * @default
+       */
+      video_prompt: string;
+      /**
+       * Audio Prompt
+       * @default
+       */
+      audio_prompt: string;
+      /**
+       * Duration Seconds
+       * @default 5
+       */
+      duration_seconds: number;
+      image_settings?: components["schemas"]["ShotImageSettings"];
+      video_settings?: components["schemas"]["ShotVideoSettings"];
+      /** Expected Version */
+      expected_version: number;
+    };
+    /** ShotRead */
+    ShotRead: {
+      /** Id */
+      id: number;
+      /** Version */
+      version: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Episode Id */
+      episode_id: number;
+      /** Order Index */
+      order_index: number;
+      /** Raw Description */
+      raw_description: string;
+      /** Dialogue */
+      dialogue: string;
+      /** Character Ids */
+      character_ids: string[];
+      /** Image Prompt */
+      image_prompt: string;
+      /** Video Prompt */
+      video_prompt: string;
+      /** Audio Prompt */
+      audio_prompt: string;
+      /** Duration Seconds */
+      duration_seconds: number;
+      /** Actual Duration Seconds */
+      actual_duration_seconds: number;
+      /** Image Settings */
+      image_settings: {
+        [key: string]: unknown;
+      };
+      /** Video Settings */
+      video_settings: {
+        [key: string]: unknown;
+      };
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "DRAFT" | "READY";
+      /** Deleted At */
+      deleted_at: string | null;
+      /** References */
+      references: components["schemas"]["ReferenceRead"][];
+      /** Reference Asset Ids */
+      reference_asset_ids: number[];
+      selection: components["schemas"]["SelectionRead"];
+      /** Image Input Hash */
+      image_input_hash: string;
+      /** Video Input Hash */
+      video_input_hash: string | null;
+      /** Video Ready */
+      video_ready: boolean;
+      /** Configuration Errors */
+      configuration_errors: string[];
+      /** Compiled Image Prompt */
+      compiled_image_prompt: string;
+      /** Compiled Video Prompt */
+      compiled_video_prompt: string;
+      /** Read Only */
+      read_only: boolean;
+    };
+    /** ShotReorder */
+    ShotReorder: {
+      /** Expected Version */
+      expected_version: number;
+      /** Shot Ids */
+      shot_ids: number[];
+    };
+    /** ShotVideoSettings */
+    ShotVideoSettings: {
+      /**
+       * Width
+       * @default 384
+       */
+      width: number;
+      /**
+       * Height
+       * @default 672
+       */
+      height: number;
+      /** Preset */
+      preset?: ("quality" | "fast") | null;
+      /** Seed */
+      seed?: number | null;
     };
     /** TextSettings */
     TextSettings: {
@@ -2213,6 +2573,782 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  list_shots_api_v1_episodes__episode_id__shots_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episode_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotListRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  create_shot_api_v1_episodes__episode_id__shots_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episode_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShotCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  get_shot_api_v1_shots__shot_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  delete_shot_api_v1_shots__shot_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShotDelete"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  update_shot_api_v1_shots__shot_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShotPatch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  reorder_shots_api_v1_episodes__episode_id__shots_reorder_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episode_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShotReorder"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"][];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  references_api_v1_shots__shot_id__references_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReferencesUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  selection_api_v1_shots__shot_id__selection_put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SelectionUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShotRead"];
+        };
       };
       /** @description Forbidden */
       403: {

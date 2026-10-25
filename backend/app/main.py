@@ -9,7 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
-from .api import assets, bootstrap, episodes, projects, settings
+from .api import assets, bootstrap, episodes, projects, settings, shots
 from .config import AppSettings
 from .db import Database
 from .errors import AppError
@@ -115,6 +115,7 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
         episodes.router,
         settings.router,
         assets.router,
+        shots.router,
     ):
         app.include_router(router, prefix="/api/v1")
     return app

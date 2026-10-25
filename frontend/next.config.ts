@@ -14,6 +14,11 @@ if (
 }
 
 const config: NextConfig = {
+  agentRules: false,
+  experimental: {
+    // Next代理会克隆请求体；默认10MiB会截断产品允许的视频上传。
+    proxyClientMaxBodySize: 513 * 1024 * 1024,
+  },
   async rewrites() {
     return [
       {

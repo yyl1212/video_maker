@@ -10,6 +10,7 @@
   --muted: #798078;
   --line: #e5e6dc;
   --green: #275847;
+  --olive: #6b785b;
   --paper: #f6f5f0;
 }
 * {
@@ -823,6 +824,212 @@ input[type="checkbox"] {
 .asset-details .notice button {
   margin: 10px 8px 0 0;
 }
+.shot-workbench {
+  margin-top: 40px;
+  padding-top: 30px;
+  border-top: 1px solid var(--line);
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.shot-layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.shot-list {
+  display: grid;
+  gap: 10px;
+  position: sticky;
+  top: 18px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 3px;
+}
+.shot-row {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fafaf7;
+}
+.shot-row.selected {
+  outline: 2px solid #778069;
+}
+.shot-tab {
+  display: grid;
+  gap: 9px;
+  padding: 16px;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: 0;
+}
+.shot-tab strong {
+  font-size: 13px;
+  line-height: 1.8;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.shot-tab .muted {
+  font-size: 11px;
+}
+.row-actions {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 10px;
+}
+.row-actions button {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: white;
+  font-size: 12px;
+  min-width: 26px;
+  height: 25px;
+}
+.shot-content {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.shot-editor textarea {
+  font-size: 13px;
+  line-height: 1.8;
+}
+.shot-editor .muted,
+.reference-picker .muted,
+.selection-panel > .muted {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.advanced-settings,
+.compiled-preview {
+  margin: 24px 0;
+  padding: 16px;
+  background: #f6f6f0;
+  border-radius: 8px;
+}
+summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+.compiled-preview p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.parameter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.parameter-grid label {
+  margin: 0;
+  font-size: 11px;
+}
+.parameter-grid input,
+.parameter-grid select {
+  width: 100%;
+  margin-top: 8px;
+}
+.reference-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+  max-height: 310px;
+  overflow-y: auto;
+}
+.reference-options label {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 6px;
+  align-items: center;
+  margin: 0;
+  font-size: 11px;
+  background: #f6f6f0;
+  padding: 8px;
+  border-radius: 6px;
+}
+.reference-options img {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 80px;
+  object-fit: contain;
+}
+.reference-options span {
+  overflow-wrap: anywhere;
+}
+.reference-order {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.reference-order li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  padding: 10px 0;
+  font-size: 12px;
+}
+.reference-order strong {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.reference-order select {
+  padding: 6px;
+  font-size: 11px;
+}
+.reference-order .row-actions {
+  padding: 0;
+}
+.stale-badge {
+  color: #8a571f;
+  background: #f4e8ce;
+  border: 1px solid #e3cd9b;
+  display: inline-block;
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-size: 10px;
+  margin-left: 8px;
+  width: fit-content;
+}
+.selection-panel h3 {
+  font-size: 14px;
+  margin-top: 24px;
+}
+.selection-panel select {
+  width: 100%;
+}
+.confirm-choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.selection-panel .notice button {
+  margin: 10px 8px 0 0;
+}
+.delete-shot {
+  text-align: right;
+  padding: 10px;
+}
+.delete-shot .notice button {
+  margin-left: 10px;
+}
 @media (max-width: 1100px) {
   .asset-workspace {
     grid-template-columns: 1fr;
@@ -836,6 +1043,25 @@ input[type="checkbox"] {
   }
 }
 @media (max-width: 760px) {
+  .shot-layout {
+    grid-template-columns: 1fr;
+  }
+  .shot-list {
+    display: flex;
+    position: static;
+    max-height: 240px;
+    padding: 3px;
+    overflow-x: auto;
+  }
+  .shot-row {
+    min-width: 170px;
+    max-width: 200px;
+    flex-shrink: 0;
+  }
+  .shot-workbench > .section-heading {
+    display: grid;
+    gap: 16px;
+  }
   .sidebar {
     width: 72px;
     padding: 24px 10px;

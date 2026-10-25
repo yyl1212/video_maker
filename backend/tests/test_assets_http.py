@@ -1,4 +1,3 @@
-import subprocess
 from io import BytesIO
 
 import pytest
@@ -24,39 +23,6 @@ def upload_image(client, project_id, **kwargs):
         files={"file": ("../../原创.png", image_bytes(), "image/png")},
         **kwargs,
     )
-
-
-@pytest.fixture
-def video_file(tmp_path):
-    path = tmp_path / "self-made.mp4"
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-v",
-            "error",
-            "-f",
-            "lavfi",
-            "-i",
-            "color=c=olive:s=96x64:r=24",
-            "-f",
-            "lavfi",
-            "-i",
-            "sine=frequency=440:sample_rate=48000",
-            "-t",
-            "0.5",
-            "-c:v",
-            "libx264",
-            "-pix_fmt",
-            "yuv420p",
-            "-c:a",
-            "aac",
-            str(path),
-        ],
-        check=True,
-        timeout=15,
-        capture_output=True,
-    )
-    return path
 
 
 def test_upload_limits_and_real_media_type(client, monkeypatch):
@@ -219,10 +185,11 @@ def test_upload_body_limit_with_and_without_content_length(client, monkeypatch):
     assert result.json()["error"]["code"] == "UPLOAD_TOO_LARGE"
 
 
-def test_truncated_image_is_invalid_input_and_not_storage_failure(client):
+@pytest.mark.parametrize("trim", [30, 40, 60])
+def test_truncated_image_is_invalid_input_and_not_storage_failure(client, trim):
     project = make_project(client)
     response = client.post(
         f"/api/v1/projects/{project['id']}/assets",
-        files={"file": ("broken.png", image_bytes()[:40], "image/png")},
+        files={"file": ("broken.png", image_bytes()[:-trim], "image/png")},
     )
     assert response.status_code == 422

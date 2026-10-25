@@ -154,11 +154,11 @@
 
 **接口：** `StorageService.freeze_inputs(task_id, assets) -> list[FrozenAsset]`、`publish_file(temp_path, project_id) -> PublishedFile`；`AssetService.upload(project_id, upload) -> AssetRead`；`FFmpegService.probe(path: Path) -> MediaInfo`。
 
-- [ ] 先写测试：`test_path_escape_and_symlink_rejected`、`test_upload_limits_and_real_media_type`、`test_atomic_publish_does_not_register_partial_file`、`test_orphan_is_quarantined_without_becoming_done`、`test_cross_project_content_and_range_access`；自制图片/声音/MP4，不使用真实作品。
-- [ ] 跑失败测试；实现绝对路径白名单、图片规范化、哈希、ffprobe、缩略图、Range及下载、软删除引用检查。AssetService.upload 遇DB失败不留成功记录。
-- [ ] 实现资产筛选、上传、预览和错误提示；用户选择文件只复制入本平台目录，不引用外部易变文件。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_storage.py tests/test_assets_http.py -q`；前端执行 assets 组件测试及typecheck。
-- [ ] 审查并提交 `feat: add managed local asset library`。
+- [x] 先写测试：`test_path_escape_and_symlink_rejected`、`test_upload_limits_and_real_media_type`、`test_atomic_publish_does_not_register_partial_file`、`test_orphan_is_quarantined_without_becoming_done`、`test_cross_project_content_and_range_access`；自制图片/声音/MP4，不使用真实作品。
+- [x] 跑失败测试；实现绝对路径白名单、图片规范化、哈希、ffprobe、缩略图、Range及下载、软删除引用检查。AssetService.upload 遇DB失败不留成功记录。
+- [x] 实现资产筛选、上传、预览和错误提示；用户选择文件只复制入本平台目录，不引用外部易变文件。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_storage.py tests/test_assets_http.py -q`；前端执行 assets 组件测试及typecheck。
+- [x] 审查并提交 `feat: add managed local asset library`。
 
 ### 任务 7：分镜、参考绑定、采用与过期判定
 
@@ -166,10 +166,10 @@
 
 **接口：** `ShotService.replace_references(shot_id, refs, expected_version) -> ShotRead`；`select_assets(shot_id, selection, shot_version, selection_version) -> ShotRead`；`reorder(episode_id, shot_ids, expected_version) -> list[ShotRead]`；纯函数 `compile_image(snapshot) -> CompiledPrompt`、`compile_video(snapshot) -> CompiledPrompt` 和输入哈希函数。
 
-- [ ] 先写测试：同项目图片引用、顺序固定、重复和缺失拒绝、重排无唯一冲突、24镜上限、无参考仍可READY；采用检查类型/项目/镜头来源/双版本。
-- [ ] 增加指纹测试：风格/实际参考/首帧变化会使相关结果过期；标题、重排及未使用资产变化不误伤；上传采用绑定当前输入，旧生成结果不可绕过当前指纹采纳。
-- [ ] 跑失败测试后实现；ShotRead聚合Selection和references，不重复持久化reference_asset_ids；UI保留未保存修改并明确展示“旧版本”。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_shots.py tests/test_selection.py tests/test_fingerprints.py -q`；前端执行 shots 测试及typecheck。
+- [x] 先写测试：同项目图片引用、顺序固定、重复和缺失拒绝、重排无唯一冲突、24镜上限、无参考仍可READY；采用检查类型/项目/镜头来源/双版本。
+- [x] 增加指纹测试：风格/实际参考/首帧变化会使相关结果过期；标题、重排及未使用资产变化不误伤；上传采用绑定当前输入，旧生成结果不可绕过当前指纹采纳。
+- [x] 跑失败测试后实现；ShotRead聚合Selection和references，不重复持久化reference_asset_ids；UI保留未保存修改并明确展示“旧版本”。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_shots.py tests/test_selection.py tests/test_fingerprints.py -q`；前端执行 shots 测试及typecheck。
 - [ ] 审查并提交 `feat: add shot references and explicit asset selection`，等待 M3 确认。
 
 ## M4：本地 LLM 解析和 Prompt 扩写

@@ -1,12 +1,13 @@
 """图片解码后规范化，视频探测保留原音轨；发布成功不等于登记成功。"""
 
+import logging
 import os
 import warnings
 from dataclasses import asdict
 from pathlib import Path
 
 from fastapi import UploadFile
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageOps
 from sqlalchemy import select
 
 from app.db import Database
@@ -20,6 +21,31 @@ from app.services.storage import StorageService
 
 IMAGE_LIMIT = 16 * 1024 * 1024
 VIDEO_LIMIT = 512 * 1024 * 1024
+logger = logging.getLogger(__name__)
+
+
+def decode_image(path: Path):
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(path, formats=("PNG", "JPEG", "WEBP")) as check:
+                check.verify()
+            with Image.open(path, formats=("PNG", "JPEG", "WEBP")) as decoded:
+                if decoded.width * decoded.height > 40_000_000:
+                    raise ValueError("pixel limit")
+                decoded.load()
+                return ImageOps.exif_transpose(decoded).convert("RGBA")
+    except (
+        OSError,
+        ValueError,
+        SyntaxError,
+        Image.DecompressionBombError,
+        Image.DecompressionBombWarning,
+    ) as exc:
+        # 解码损坏是输入错误，不能误报为磁盘故障。
+        raise AppError(
+            422, "INVALID_MEDIA", "图片损坏或格式不受支持，请重新导入"
+        ) from exc
 
 
 def get_asset(session, identifier: int, project_id: int | None = None) -> Asset:
@@ -89,6 +115,7 @@ class AssetService:
             self.storage.new_temp(ext) for ext in (".bin", ".png", ".png")
         )
         published = []
+        registered = False
         try:
             with raw.open("xb") as target:
                 size = 0
@@ -117,19 +144,11 @@ class AssetService:
             else:
                 if size > IMAGE_LIMIT:
                     raise AppError(413, "UPLOAD_TOO_LARGE", "图片不能超过16 MiB")
-                with warnings.catch_warnings():
-                    warnings.simplefilter("error", Image.DecompressionBombWarning)
-                    with Image.open(raw, formats=("PNG", "JPEG", "WEBP")) as check:
-                        check.verify()
-                    with Image.open(raw, formats=("PNG", "JPEG", "WEBP")) as decoded:
-                        if decoded.width * decoded.height > 40_000_000:
-                            raise ValueError("pixel limit")
-                        decoded.load()
-                        normalized = ImageOps.exif_transpose(decoded).convert("RGBA")
-                        normalized.save(image, "PNG")
-                        width, height = normalized.size
-                        normalized.thumbnail((320, 320))
-                        normalized.save(thumb, "PNG")
+                with decode_image(raw) as normalized:
+                    normalized.save(image, "PNG")
+                    width, height = normalized.size
+                    normalized.thumbnail((320, 320))
+                    normalized.save(thumb, "PNG")
                 source = image
                 values = dict(
                     type="image",
@@ -145,7 +164,7 @@ class AssetService:
             published.append(main.path)
             thumbnail = self.storage.publish_file(thumb, project_id)
             published.append(thumbnail.path)
-            return self.register(
+            result = self.register(
                 project_id,
                 dict(
                     **values,
@@ -163,26 +182,21 @@ class AssetService:
                     },
                 ),
             )
-        except (
-            UnidentifiedImageError,
-            ValueError,
-            Image.DecompressionBombError,
-            Image.DecompressionBombWarning,
-        ) as exc:
-            raise AppError(
-                422, "INVALID_MEDIA", "请上传有效的PNG、JPEG、WebP图片或MP4视频"
-            ) from exc
+            registered = True
+            return result
         except OSError as exc:
             raise AppError(
                 503, "FILE_WRITE_FAILED", "素材读写失败，请检查文件后重试"
             ) from exc
-        except Exception:
-            self.storage.isolate(published)
-            raise
         finally:
             # 若登记失败或图片解码异常，暂存文件不能出现在素材列表。
+            if not registered:
+                self.storage.isolate(published)
             for path in (raw, image, thumb):
-                path.unlink(missing_ok=True)
+                try:
+                    path.unlink(missing_ok=True)
+                except OSError:
+                    logger.error("暂存文件清理失败，未影响已登记素材")
 
     def update(self, asset_id: int, data: AssetPatch) -> AssetRead:
         with self.database.session_scope(write=True) as session:

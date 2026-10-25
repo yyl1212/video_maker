@@ -48,13 +48,13 @@ export default function RootLayout({
           <div className="main-shell">
             <div className="topbar">
               <span>
-                创作工作台 <span className="muted">/ 项目与剧集</span>
+                创作工作台 <span className="muted">/ 故事与镜头</span>
               </span>
               <span className="local-badge">● 本地创作</span>
             </div>
             <main>{children}</main>
             <div className="app-footer">
-              映序 · 留住故事的每一个起点<span>M1 · 项目与剧集</span>
+              映序 · 留住故事的每一个起点<span>M3 · 资产与分镜</span>
             </div>
           </div>
         </div>

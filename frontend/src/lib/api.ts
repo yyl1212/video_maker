@@ -6,6 +6,23 @@ export type Character = components["schemas"]["Character"];
 export type ProjectCreate = components["schemas"]["ProjectCreate"];
 export type EpisodeCreate = components["schemas"]["EpisodeCreate"];
 export type AssetRead = components["schemas"]["AssetRead"];
+export type ShotRead = components["schemas"]["ShotRead"];
+export type ShotListRead = components["schemas"]["ShotListRead"];
+export type ShotEditable = Required<
+  Pick<
+    components["schemas"]["ShotCreate"],
+    | "raw_description"
+    | "dialogue"
+    | "character_ids"
+    | "image_prompt"
+    | "video_prompt"
+    | "audio_prompt"
+    | "duration_seconds"
+    | "image_settings"
+    | "video_settings"
+  >
+>;
+export type ReferenceInput = components["schemas"]["ReferenceInput"];
 
 let sessionPromise: Promise<string> | null = null;
 
