@@ -17,3 +17,12 @@ class RecordRead(BaseModel):
     version: int
     created_at: datetime
     updated_at: datetime
+
+
+class ErrorDetail(InputModel):
+    code: str
+    message: str
+
+
+class ErrorRead(InputModel):
+    error: ErrorDetail

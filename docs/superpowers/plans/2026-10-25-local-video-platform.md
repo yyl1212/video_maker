@@ -8,7 +8,7 @@
 
 **技术栈：** Next.js App Router、TypeScript strict、Tailwind CSS、Zustand；FastAPI、SQLAlchemy 2.x、SQLite、Alembic；独立 LLM/Draw Things/MiniMax-H3 客户端及 FFmpeg。
 
-**设计依据：** [完整设计](../specs/2026-10-25-local-video-platform-design.md)。本计划与设计一同供本轮审阅，不代表已获准实施任一阶段。
+**设计依据：** [完整设计](../specs/2026-10-25-local-video-platform-design.md)。用户已确认开始M1（任务1、2），其余任务按模块单独推进。当前证据见[M1验收记录](../../M1项目剧集验收.md)。
 
 **交付编排：** [敏捷进度与看板](2026-10-25-agile-delivery.md)。M1～M8作为模块标识保留，实际按 M1→M3→M2→M5→M6→M7→M4→M8 交付；优先用手工分镜贯通音画制作，再交付AI辅助。模块及任务内的验收条件保持不变。
 
@@ -244,4 +244,4 @@
 
 以下情况暂停该阶段并更新设计，而不是继续猜测：真实H3协议与旧fixture不同、SDK无法保留必要参数、BackgroundTasks无法保持接口响应、模型断连后无法满足执行状态确认、外键或文件发布规则需要改变。一般实现细节在设计范围内自行解决。
 
-本轮结束后只请求审阅设计及计划；不创建后端、前端、数据库或运行环境。待用户明确指定M1或其他有依赖满足的阶段，再执行该阶段。
+用户已确认开始M1，本轮仅实施任务1、2并交付验收。M1用户验收后，依敏捷顺序等待M3开工指令，不自动进入后续模块。

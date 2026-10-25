@@ -252,3 +252,21 @@ def test_database_survives_app_restart(tmp_path):
                 ]
                 project(http, name)
             assert http.get("/api/v1/projects").json()[0]["name"] == "首次创建"
+
+
+def test_no_cloud_cdn_documentation_pages(client):
+    # 默认Swagger/ReDoc页面从外部CDN加载脚本，本机产品不应暴露这些入口。
+    assert client.get("/docs").status_code == 404
+    assert client.get("/redoc").status_code == 404
+    assert client.get("/openapi.json").status_code == 200
+
+
+def test_openapi_describes_the_actual_validation_error(client):
+    schema = client.get("/openapi.json").json()
+    invalid = client.post("/api/v1/projects", json={"name": ""})
+    assert invalid.status_code == 422
+    assert invalid.json()["error"]["code"] == "VALIDATION_ERROR"
+    documented = schema["paths"]["/api/v1/projects"]["post"]["responses"]["422"]
+    assert documented["content"]["application/json"]["schema"]["$ref"].endswith(
+        "/ErrorRead"
+    )

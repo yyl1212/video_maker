@@ -13,6 +13,7 @@ from .api import bootstrap, episodes, projects, settings
 from .config import AppSettings
 from .db import Database
 from .errors import AppError
+from .schemas.common import ErrorRead
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,17 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
         finally:
             database.close()
 
-    app = FastAPI(title="本地视频制作平台", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="本地视频制作平台",
+        version="0.1.0",
+        lifespan=lifespan,
+        docs_url=None,
+        redoc_url=None,
+        responses={
+            status: {"model": ErrorRead}
+            for status in (403, 404, 409, 415, 422, 500, 503)
+        },
+    )
     app.state.token = secrets.token_urlsafe(32)
 
     @app.middleware("http")
