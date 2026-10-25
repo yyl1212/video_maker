@@ -72,26 +72,34 @@ export function EpisodeWorkspace({
           <h1>{episode.title}</h1>
           <p className="lede">先忠实记录故事，再逐步编排镜头。</p>
         </div>
-        <button
-          className="button secondary"
-          disabled={action.pending || Boolean(project.archived_at)}
-          onClick={() =>
-            void action.run(
-              (signal) =>
-                apiRequest<EpisodeRead>(`/episodes/${episode.id}`, {
-                  method: "PATCH",
-                  signal,
-                  body: {
-                    expected_version: episode.version,
-                    archived: !episode.archived_at,
-                  },
-                }),
-              episode.archived_at ? "剧集已恢复" : "剧集已归档",
-            )
-          }
-        >
-          {episode.archived_at ? "恢复剧集" : "归档剧集"}
-        </button>
+        <div className="button-row">
+          <Link
+            className="button primary"
+            href={`/projects/${projectId}/episodes/${episodeId}/export`}
+          >
+            时间线与导出
+          </Link>
+          <button
+            className="button secondary"
+            disabled={action.pending || Boolean(project.archived_at)}
+            onClick={() =>
+              void action.run(
+                (signal) =>
+                  apiRequest<EpisodeRead>(`/episodes/${episode.id}`, {
+                    method: "PATCH",
+                    signal,
+                    body: {
+                      expected_version: episode.version,
+                      archived: !episode.archived_at,
+                    },
+                  }),
+                episode.archived_at ? "剧集已恢复" : "剧集已归档",
+              )
+            }
+          >
+            {episode.archived_at ? "恢复剧集" : "归档剧集"}
+          </button>
+        </div>
       </header>
       {(action.error || action.message) && (
         <p
@@ -125,7 +133,7 @@ export function EpisodeWorkspace({
           <div className="stage-note">
             当前可用：分镜编排、参考首帧、原生音画
             <br />
-            在下方逐镜生成并采用首帧和有声视频，成片导出随后接入。
+            在下方逐镜生成并采用首帧和有声视频，通过时间线排序导出成片。
           </div>
         </aside>
       </div>

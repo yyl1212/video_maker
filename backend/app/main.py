@@ -10,13 +10,24 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
-from .api import assets, bootstrap, episodes, jobs, projects, runtime, settings, shots
+from .api import (
+    assets,
+    bootstrap,
+    episodes,
+    exports,
+    jobs,
+    projects,
+    runtime,
+    settings,
+    shots,
+)
 from .config import AppSettings
 from .db import Database
 from .errors import AppError
 from .local_http import is_local_host
 from .models import Asset
 from .schemas.common import ErrorRead
+from .services.exports import ExportHandler
 from .services.generation import ImageGenerationHandler, VideoGenerationHandler
 from .services.recovery import RecoveryService, WorkspaceLock
 from .services.storage import StorageService
@@ -47,6 +58,7 @@ def create_app(
             database.initialize()
             app.state.database = database
             app.state.storage = StorageService(config.data_dir)
+            app.state.export_service = ExportHandler(database, app.state.storage)
             task_service = app.state.task_service = TaskService(
                 database,
                 app.state.storage,
@@ -54,6 +66,7 @@ def create_app(
                     {
                         "IMAGE": ImageGenerationHandler(database, app.state.storage),
                         "VIDEO": VideoGenerationHandler(database, app.state.storage),
+                        "EXPORT": app.state.export_service,
                     }
                     if task_handlers is None
                     else task_handlers
@@ -150,6 +163,7 @@ def create_app(
         shots.router,
         jobs.router,
         runtime.router,
+        exports.router,
     ):
         app.include_router(router, prefix="/api/v1")
     return app

@@ -5,13 +5,15 @@ from pydantic import Field, field_validator, model_validator
 
 from .common import InputModel, RecordRead, Version
 
-AssetTag = Literal["reference", "character", "scene", "first_frame", "video_clip"]
+AssetTag = Literal[
+    "reference", "character", "scene", "first_frame", "video_clip", "final_video"
+]
 
 
 class AssetPatch(InputModel):
     expected_version: Version
     name: str | None = Field(default=None, min_length=1, max_length=200)
-    tags: list[AssetTag] | None = Field(default=None, max_length=5)
+    tags: list[AssetTag] | None = Field(default=None, max_length=6)
 
     @model_validator(mode="after")
     def no_null(self):
