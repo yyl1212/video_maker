@@ -224,3 +224,47 @@ test("服务端忙碌或状态未知时禁止新生成", async () => {
   expect(await screen.findByText(/本机任务状态待恢复/)).toBeVisible();
   expect(screen.getByRole("button", { name: "生成首帧" })).toBeDisabled();
 });
+
+test("提交响应丢失并遇到会话403后，恢复仍复用原幂等键，只创建一个任务", async () => {
+  const original = vi.mocked(fetch).getMockImplementation()!;
+  const jobs = new Map<string, number>();
+  let attempts = 0;
+  vi.mocked(fetch).mockImplementation(async (input, init) => {
+    if (!String(input).endsWith("/image-jobs")) return original(input, init);
+    attempts++;
+    const request = JSON.parse(String(init?.body)) as {
+      idempotency_key: string;
+    };
+    if (attempts === 2)
+      return Response.json(
+        { error: { code: "SESSION_EXPIRED", message: "页面会话已失效" } },
+        { status: 403 },
+      );
+    const id = jobs.get(request.idempotency_key) ?? 12 + jobs.size;
+    jobs.set(request.idempotency_key, id);
+    if (attempts === 1) throw new TypeError("response lost after accepted");
+    return Response.json(
+      { job_id: id, status: "DONE", poll_url: `/api/v1/jobs/${id}` },
+      { status: 202 },
+    );
+  });
+  render(panel());
+  const generate = await screen.findByRole("button", { name: "生成首帧" });
+  await waitFor(() => expect(generate).toBeEnabled());
+  fireEvent.click(generate);
+  fireEvent.click(
+    await screen.findByRole("button", { name: "查询或重试原提交" }),
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent("页面会话已失效");
+  expect(sessionStorage.getItem("vm:image-intent:3")).not.toBeNull();
+  const retry = screen.getByRole("button", { name: "查询或重试原提交" });
+  await waitFor(() => expect(retry).toBeEnabled());
+  fireEvent.click(retry);
+  await waitFor(() => expect(attempts).toBe(3));
+  expect(jobs.size).toBe(1);
+  const bodies = vi
+    .mocked(fetch)
+    .mock.calls.filter(([p]) => String(p).endsWith("/image-jobs"))
+    .map(([, i]) => i?.body);
+  expect(new Set(bodies).size).toBe(1);
+});

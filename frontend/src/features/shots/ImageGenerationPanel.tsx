@@ -115,11 +115,25 @@ export function ImageGenerationPanel({
       } catch {}
     } catch (reason: unknown) {
       if (!alive.current || request.signal.aborted) return;
-      // 4xx是明确拒收；网络错误和5xx可能发生在接收之后，保留原意图。
+      // 403/代理错误只拒绝本次重试，不能证明此前意图未接收。
+      // 仅服务端幂等查询之后的明确业务拒绝允许重新建立意图。
+      const rejectedBeforeAcceptance = new Set([
+        "VERSION_CONFLICT",
+        "IMAGE_INPUT_CHANGED",
+        "SHOT_NOT_READY",
+        "IMAGE_MODEL_UNSUPPORTED",
+        "IMAGE_DIMENSIONS",
+        "TASK_BUSY",
+        "ASSET_CHANGED",
+        "ARCHIVED",
+        "SHOT_NOT_FOUND",
+      ]);
       if (
         reason instanceof ApiError &&
         reason.status >= 400 &&
-        reason.status < 500
+        reason.status < 500 &&
+        reason.code !== null &&
+        rejectedBeforeAcceptance.has(reason.code)
       ) {
         setIntent(null);
         try {
