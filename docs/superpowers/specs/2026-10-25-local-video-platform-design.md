@@ -248,7 +248,7 @@ READY 条件：描述、image_prompt 非空，角色及参考关联有效，生�
 
 `output_asset_id` 只由任务发布事务维护，须反查 Asset.source_task_id 和归属；媒体接口不信任该索引单独授权。Asset.source_task_id 对非空值设唯一约束：每个成功媒体任务只发布一个主资产。
 
-任务范围：PARSE_SCRIPT 要求 episode_id；OPTIMIZE_PROMPTS、IMAGE、VIDEO 要求 episode_id 和 shot_id；EXPORT 要求 episode_id、shot_id 为空。所有目标必须属于 project_id。
+任务范围：PARSE_SCRIPT 要求 episode_id 且 shot_id 为空；OPTIMIZE_PROMPTS、IMAGE、VIDEO 要求 episode_id 和 shot_id；EXPORT 要求 episode_id 且 shot_id 为空。所有目标必须属于 project_id。
 
 全局活跃唯一约束：对 `active_slot` 建条件唯一索引，条件为 status 属于 PENDING、RUNNING；另设 CHECK(active_slot=1)。idempotency_key 相同且 request_hash 相同返回原任务，不重复调度；同键不同输入返回 409。
 

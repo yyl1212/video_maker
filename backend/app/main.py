@@ -1,0 +1,88 @@
+"""M1只提供项目配置，不注册尚未实现的生成入口。"""
+
+import logging
+import secrets
+from contextlib import asynccontextmanager
+from urllib.parse import urlsplit
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+from .api import bootstrap, episodes, projects, settings
+from .config import AppSettings
+from .db import Database
+from .errors import AppError
+
+logger = logging.getLogger(__name__)
+
+
+def error_response(status: int, code: str, message: str) -> JSONResponse:
+    return JSONResponse(
+        {"error": {"code": code, "message": message}}, status_code=status
+    )
+
+
+def create_app(config: AppSettings | None = None) -> FastAPI:
+    config = config or AppSettings()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        database = Database(config)
+        try:
+            database.initialize()
+            app.state.database = database
+            yield
+        finally:
+            database.close()
+
+    app = FastAPI(title="本地视频制作平台", version="0.1.0", lifespan=lifespan)
+    app.state.token = secrets.token_urlsafe(32)
+
+    @app.middleware("http")
+    async def local_protection(request: Request, call_next):
+        try:
+            host = urlsplit("//" + request.headers.get("host", "")).hostname
+        except ValueError:
+            host = None
+        if host not in ("127.0.0.1", "localhost", "::1"):
+            return error_response(403, "LOCAL_ONLY", "请通过本机地址访问工作台")
+        origin = request.headers.get("origin")
+        if origin and origin not in config.frontend_origins:
+            return error_response(403, "ORIGIN_REJECTED", "不允许跨站访问本机工作台")
+        if request.headers.get("sec-fetch-site") == "cross-site":
+            return error_response(403, "ORIGIN_REJECTED", "请直接打开本机工作台")
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            supplied = request.headers.get("x-local-token", "")
+            if not secrets.compare_digest(supplied, app.state.token):
+                return error_response(
+                    403, "SESSION_EXPIRED", "页面会话已失效，请刷新后重试"
+                )
+            if (
+                request.headers.get("content-type", "").split(";")[0]
+                != "application/json"
+            ):
+                return error_response(415, "JSON_REQUIRED", "请使用JSON提交表单")
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+
+    @app.exception_handler(AppError)
+    async def app_error(request: Request, error: AppError):
+        return error_response(error.status, error.code, error.message)
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_error(request: Request, error: RequestValidationError):
+        return error_response(
+            422, "VALIDATION_ERROR", "输入不合法，请检查字段内容、长度和版本"
+        )
+
+    @app.exception_handler(Exception)
+    async def unexpected_error(request: Request, error: Exception):
+        logger.error("请求未完成，异常类型：%s", type(error).__name__)
+        return error_response(500, "INTERNAL_ERROR", "操作未完成，请稍后重试")
+
+    for router in (bootstrap.router, projects.router, episodes.router, settings.router):
+        app.include_router(router, prefix="/api/v1")
+    return app
