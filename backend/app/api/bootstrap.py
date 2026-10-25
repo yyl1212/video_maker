@@ -16,13 +16,13 @@ class Capabilities(BaseModel):
 class BootstrapRead(BaseModel):
     token: str
     version: str = "0.1.0"
-    module: str = "M6"
+    module: str = "M7"
     capabilities: Capabilities = Capabilities()
 
 
 class HealthRead(BaseModel):
     status: str = "ok"
-    module: str = "M6"
+    module: str = "M7"
 
 
 @router.get("/bootstrap", response_model=BootstrapRead)

@@ -481,7 +481,6 @@ class ExportHandler:
                 or task.kind != "EXPORT"
                 or task.status != "DONE"
                 or task.output_asset_id != asset.id
-                or "final_video" not in asset.tags
             ):
                 raise AppError(
                     404, "MANIFEST_NOT_FOUND", "此素材没有可下载的成片来源清单"

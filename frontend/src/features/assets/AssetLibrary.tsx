@@ -12,6 +12,7 @@ const tags = {
   scene: "场景",
   first_frame: "首帧",
   video_clip: "视频片段",
+  final_video: "成片",
 };
 
 function AssetDetails({

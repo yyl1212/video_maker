@@ -524,7 +524,14 @@ export interface components {
       name?: string | null;
       /** Tags */
       tags?:
-        | ("reference" | "character" | "scene" | "first_frame" | "video_clip")[]
+        | (
+            | "reference"
+            | "character"
+            | "scene"
+            | "first_frame"
+            | "video_clip"
+            | "final_video"
+          )[]
         | null;
     };
     /** AssetRead */
@@ -603,7 +610,7 @@ export interface components {
       version: string;
       /**
        * Module
-       * @default M6
+       * @default M7
        */
       module: string;
       /**
@@ -813,7 +820,7 @@ export interface components {
       status: string;
       /**
        * Module
-       * @default M6
+       * @default M7
        */
       module: string;
     };

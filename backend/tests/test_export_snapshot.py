@@ -386,3 +386,63 @@ def test_video_changed_after_acceptance_fails_freezing_and_releases_slot(
     assert result.output_asset_id is None
     assert service.active().runtime_state.state == "IDLE"
     assert not client.get(f"/api/v1/episodes/{episode['id']}/exports").json()
+
+
+def completed_export(client, video_file):
+    project, episode, _ = timeline(client, video_file)
+    response = client.post(
+        f"/api/v1/episodes/{episode['id']}/export-jobs",
+        json=body(preview(client, episode)),
+    )
+    task = client.get(response.json()["poll_url"]).json()
+    assert task["status"] == "DONE", task
+    asset = client.get(f"/api/v1/episodes/{episode['id']}/exports").json()[0]
+    return project, episode, asset
+
+
+def test_final_video_can_be_renamed_and_all_asset_tags_remain_editable(
+    client, video_file
+):
+    project, _, asset = completed_export(client, video_file)
+    renamed = client.patch(
+        f"/api/v1/assets/{asset['id']}",
+        json={
+            "expected_version": asset["version"],
+            "name": "原创成片新版名称",
+            "tags": [
+                "reference",
+                "character",
+                "scene",
+                "first_frame",
+                "video_clip",
+                "final_video",
+            ],
+        },
+    )
+    assert renamed.status_code == 200, renamed.text
+    assert renamed.json()["name"] == "原创成片新版名称"
+    assert (
+        client.get(
+            f"/api/v1/assets/{asset['id']}/manifest?project_id={project['id']}"
+        ).status_code
+        == 200
+    )
+
+
+def test_removing_editable_tags_keeps_final_video_history_and_manifest(
+    client, video_file
+):
+    project, episode, asset = completed_export(client, video_file)
+    updated = client.patch(
+        f"/api/v1/assets/{asset['id']}",
+        json={"expected_version": asset["version"], "tags": []},
+    )
+    assert updated.status_code == 200, updated.text
+    history = client.get(f"/api/v1/episodes/{episode['id']}/exports").json()
+    assert history[0]["id"] == asset["id"] and history[0]["tags"] == []
+    assert (
+        client.get(
+            f"/api/v1/assets/{asset['id']}/manifest?project_id={project['id']}"
+        ).status_code
+        == 200
+    )

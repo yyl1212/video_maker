@@ -4986,11 +4986,12 @@
                     "character",
                     "scene",
                     "first_frame",
-                    "video_clip"
+                    "video_clip",
+                    "final_video"
                   ]
                 },
                 "type": "array",
-                "maxItems": 5
+                "maxItems": 6
               },
               {
                 "type": "null"
@@ -5217,7 +5218,7 @@
           "module": {
             "type": "string",
             "title": "Module",
-            "default": "M6"
+            "default": "M7"
           },
           "capabilities": {
             "$ref": "#/components/schemas/Capabilities",
@@ -5738,7 +5739,7 @@
           "module": {
             "type": "string",
             "title": "Module",
-            "default": "M6"
+            "default": "M7"
           }
         },
         "type": "object",
