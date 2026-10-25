@@ -1,5 +1,6 @@
 """独立短Session、明确事务边界与逐连接SQLite约束。"""
 
+import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -83,8 +84,12 @@ class Database:
                 ):
                     yield session
         except OperationalError as error:
+            code = getattr(error.orig, "sqlite_errorcode", 0)
+            busy = code & 0xFF in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED)
             raise AppError(
-                503, "DATABASE_UNAVAILABLE", "数据库暂时不可用，请稍后重试"
+                503,
+                "DATABASE_BUSY" if busy else "DATABASE_UNAVAILABLE",
+                "数据库正忙，请稍后重试" if busy else "数据库暂时不可用，请稍后重试",
             ) from error
 
     def close(self) -> None:

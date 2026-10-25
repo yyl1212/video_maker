@@ -8,7 +8,7 @@
 
 **技术栈：** Next.js App Router、TypeScript strict、Tailwind CSS、Zustand；FastAPI、SQLAlchemy 2.x、SQLite、Alembic；独立 LLM/Draw Things/MiniMax-H3 客户端及 FFmpeg。
 
-**设计依据：** [完整设计](../specs/2026-10-25-local-video-platform-design.md)。用户已确认开始M1（任务1、2），其余任务按模块单独推进。当前证据见[M1验收记录](../../M1项目剧集验收.md)。
+**设计依据：** [完整设计](../specs/2026-10-25-local-video-platform-design.md)。M1（任务1、2）与M3（任务6、7）已验收，用户现已确认M2（任务3、4、5）。当前证据见[M2验收记录](../../M2任务引擎验收.md)，其余任务仍按模块单独授权推进。
 
 **交付编排：** [敏捷进度与看板](2026-10-25-agile-delivery.md)。M1～M8作为模块标识保留，实际按 M1→M3→M2→M5→M6→M7→M4→M8 交付；优先用手工分镜贯通音画制作，再交付AI辅助。模块及任务内的验收条件保持不变。
 
@@ -114,11 +114,11 @@
 
 **产出：** 总接口约定中的 TaskService、TaskRunner、TaskHandler、TaskContext。任务读取 API、BackgroundTasks 注册帮助函数 `register_submission(background_tasks, submission) -> None`。生产接口不开放任意 kind 的通用伪任务入口；模拟处理器只在测试注入。
 
-- [ ] 先写失败测试：`test_two_connections_accept_only_one_task`、`test_cross_endpoint_kinds_share_slot`、`test_same_key_reuses_job_without_second_dispatch`、`test_same_key_different_body_conflicts`、`test_response_returns_before_model_finishes`、`test_exception_sets_failed_and_releases_known_idle_slot`。并发测试使用两个真正独立连接和提交屏障，不能只串行调用两次。
-- [ ] 跑失败测试；实现 BEGIN IMMEDIATE 短事务、活跃条件唯一索引、request_hash、CAS 启动、实际后台响应后执行、独立Session和5秒心跳。数据库忙返回503，忙任务返回429。
-- [ ] 实现 TaskOutcome 统一发布事务；处理器只能返回准备好的结果，不能自行更改当前 Shot 选择。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_task_submission.py tests/test_task_runner.py -q`。真实 TCP HTTP 测试必须证明生成未完成时已取得202及job_id，不能只依赖会等待BackgroundTasks的内存测试客户端。
-- [ ] 审查并提交 `feat: add atomic single task execution`。
+- [x] 先写失败测试：`test_two_connections_accept_only_one_task`、`test_cross_endpoint_kinds_share_slot`、`test_same_key_reuses_job_without_second_dispatch`、`test_same_key_different_body_conflicts`、`test_response_returns_before_model_finishes`、`test_exception_sets_failed_and_releases_known_idle_slot`。并发测试使用两个真正独立连接和提交屏障，不能只串行调用两次。
+- [x] 跑失败测试；实现 BEGIN IMMEDIATE 短事务、活跃条件唯一索引、request_hash、CAS 启动、实际后台响应后执行、独立Session和5秒心跳。数据库忙返回503，忙任务返回429。
+- [x] 实现 TaskOutcome 统一发布事务；处理器只能返回准备好的结果，不能自行更改当前 Shot 选择。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_task_submission.py tests/test_task_runner.py -q`。真实 TCP HTTP 测试必须证明生成未完成时已取得202及job_id，不能只依赖会等待BackgroundTasks的内存测试客户端。
+- [x] 审查并提交 `feat: add atomic single task execution`。
 
 ### 任务 4：启动恢复、执行未知状态和截止
 
@@ -128,11 +128,11 @@
 
 **产出：** `RecoveryService.startup() -> None`、`inspect_pending() -> None`、`confirm_reset(expected_version: int, backend: str) -> RuntimeRead`；数据根目录实例锁、异常巡检、总截止。
 
-- [ ] 先写 `test_second_backend_instance_cannot_open_workspace`；`test_restart_fails_pending_without_replay`；`test_restart_after_remote_dispatch_requires_reset`；`test_local_ffmpeg_identity_not_pid_only`；`test_deadline_does_not_reset_on_progress`；`test_stale_heartbeat_does_not_release_live_runner`。
-- [ ] 跑失败测试；实现实例UUID与锁、持久化执行标记、30秒PENDING CAS失败、RUNNING心跳提示及NEEDS_RESET。模型连通不能自动清除执行未知状态。
-- [ ] 按设计实现480/570/540/540秒绝对截止；测试用可注入的短预算，不能真的等待数分钟。FFmpeg子进程组身份必须可核验，无法证明停止则阻止新任务。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_task_recovery.py tests/test_task_deadline.py -q`，预期全通过，无孤立子进程。
-- [ ] 审查并提交 `feat: recover interrupted local tasks safely`。
+- [x] 先写 `test_second_backend_instance_cannot_open_workspace`；`test_restart_fails_pending_without_replay`；`test_restart_after_remote_dispatch_requires_reset`；`test_local_ffmpeg_identity_not_pid_only`；`test_deadline_does_not_reset_on_progress`；`test_stale_heartbeat_does_not_release_live_runner`。
+- [x] 跑失败测试；实现实例UUID与锁、持久化执行标记、30秒PENDING CAS失败、RUNNING心跳提示及NEEDS_RESET。模型连通不能自动清除执行未知状态。
+- [x] 按设计实现480/570/540/540秒绝对截止；测试用可注入的短预算，不能真的等待数分钟。FFmpeg子进程组身份必须可核验，无法证明停止则阻止新任务。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_task_recovery.py tests/test_task_deadline.py -q`，预期全通过，无孤立子进程。
+- [x] 审查并提交 `feat: recover interrupted local tasks safely`。
 
 ### 任务 5：前端任务条与作用域安全轮询
 
@@ -140,11 +140,11 @@
 
 **接口：** `useTaskPolling(jobId: number | null)` 返回 TaskRead、连接状态和明确刷新操作；TaskBar 读取 /jobs/active 及 runtime_state，不在前端模拟锁。
 
-- [ ] 先写测试：2秒轮询、终态停止、隐藏页5秒、刷新恢复job_id、网络失败不重新POST、切作用域的晚响应被丢弃、NEEDS_RESET显示恢复原因。
-- [ ] 跑失败测试后实现；计时器、AbortController和作用域标识均在卸载时清理，轮询不覆盖本地表单。
-- [ ] 执行 `python scripts/run-check.py --cwd frontend -- npm run test -- jobs` 和 typecheck。
-- [ ] 以模拟API和独立后端测试展示全局任务行为，不为演示加入生产环境假任务接口。
-- [ ] 审查并提交 `feat: show persistent local task progress`，等待 M2 确认。
+- [x] 先写测试：2秒轮询、终态停止、隐藏页5秒、刷新恢复job_id、网络失败不重新POST、切作用域的晚响应被丢弃、NEEDS_RESET显示恢复原因。
+- [x] 跑失败测试后实现；计时器、AbortController和作用域标识均在卸载时清理，轮询不覆盖本地表单。
+- [x] 执行 `python scripts/run-check.py --cwd frontend -- npm run test -- jobs` 和 typecheck。
+- [x] 以模拟API和独立后端测试展示全局任务行为，不为演示加入生产环境假任务接口。
+- [x] 审查并提交 `feat: show persistent local task progress`，等待 M2 确认。
 
 ## M3：资产和分镜工作台
 

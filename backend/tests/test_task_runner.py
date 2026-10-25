@@ -1,0 +1,235 @@
+import asyncio
+import threading
+from pathlib import Path
+
+import pytest
+from fastapi import BackgroundTasks
+from task_helpers import SampleHandler, command, records
+
+from app.models import RuntimeState, Task
+from app.services.tasks import register_submission
+
+
+def test_exception_sets_failed_and_releases_known_idle_slot(engine):
+    service, ids, handler = engine
+    handler.error = RuntimeError("must not expose secret prompt")
+    submitted = service.submit(command(*ids))
+    asyncio.run(service.runner.run(submitted.task.id))
+    result = service.get(submitted.task.id)
+    assert result.status == "FAILED" and "secret" not in result.error_message
+    with service.database.session_scope() as session:
+        assert session.get(RuntimeState, 1).state == "IDLE"
+        assert session.get(Task, result.id).finished_at is not None
+    assert service.submit(command(*ids)).created
+
+
+def test_runner_compare_and_swap_only_executes_once(engine):
+    service, ids, handler = engine
+    submitted = service.submit(command(*ids))
+
+    async def run():
+        await asyncio.gather(
+            service.runner.run(submitted.task.id), service.runner.run(submitted.task.id)
+        )
+
+    asyncio.run(run())
+    assert handler.calls == [submitted.task.id]
+    assert service.get(submitted.task.id).status == "DONE"
+
+
+@pytest.mark.parametrize("bad_result", [False, True])
+def test_outcome_publication_is_atomic_and_never_changes_selection(engine, bad_result):
+    from PIL import Image
+    from sqlalchemy import select
+
+    from app.models import Asset, ShotSelection
+    from app.services.tasks import PreparedAsset, TaskOutcome
+
+    service, ids, _ = engine
+
+    class ImageHandler(SampleHandler):
+        async def execute(self, context):
+            temporary = service.storage.new_temp(".png")
+            Image.new("RGB", (32, 32), "#88aa77").save(temporary, "PNG")
+            published = service.storage.publish_file(temporary, ids[0])
+            asset = PreparedAsset(
+                type="image",
+                file_path=published.path,
+                sha256=published.sha256,
+                size_bytes=published.size_bytes,
+                mime_type="image/png",
+                name="原创图片",
+                width=32,
+                height=32,
+            )
+            return TaskOutcome(
+                prepared_asset=asset,
+                result_json={"value": object()} if bad_result else None,
+            )
+
+    service.handlers["IMAGE"] = ImageHandler()
+    submitted = service.submit(command(*ids, kind="IMAGE"))
+    asyncio.run(service.runner.run(submitted.task.id))
+    with service.database.session_scope() as session:
+        assets = session.scalars(select(Asset)).all()
+        task = session.get(Task, submitted.task.id)
+        assert task.status == ("FAILED" if bad_result else "DONE")
+        assert len(assets) == (0 if bad_result else 1)
+        assert session.get(ShotSelection, ids[2]).first_frame_asset_id is None
+        assert session.get(RuntimeState, 1).state == "IDLE"
+        if not bad_result:
+            assert assets[0].source_task_id == task.id
+            assert task.output_asset_id == assets[0].id
+
+
+def test_heartbeat_updates_without_inventing_progress(engine):
+
+    service, ids, handler = engine
+    service.policy.heartbeat_seconds = 0.01
+    handler.hold = threading.Event()
+    task = service.submit(command(*ids)).task
+
+    async def run():
+        running = asyncio.create_task(service.runner.run(task.id))
+        while not handler.started.is_set():
+            await asyncio.sleep(0.002)
+        before = service.get(task.id).heartbeat_at
+        await asyncio.sleep(0.05)
+        current = service.get(task.id)
+        assert current.heartbeat_at > before
+        assert current.progress is None
+        handler.hold.set()
+        await running
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize("reuse_main", [True, False])
+def test_failed_outcome_never_quarantines_existing_assets(engine, reuse_main):
+    from io import BytesIO
+
+    from fastapi import UploadFile
+    from PIL import Image
+    from sqlalchemy import select
+
+    from app.models import Asset
+    from app.services.assets import AssetService
+    from app.services.tasks import PreparedAsset, TaskOutcome
+
+    service, ids, _ = engine
+    stream = BytesIO()
+    Image.new("RGB", (32, 32), "#884477").save(stream, "PNG")
+    stream.seek(0)
+    old = AssetService(service.database, service.storage).upload(
+        ids[0], UploadFile(file=stream, filename="原有原创图片.png")
+    )
+    old_main, old_thumb = Path(old.file_path), Path(old.thumbnail_path)
+    produced = []
+
+    class IncorrectHandler(SampleHandler):
+        async def execute(self, context):
+            path, sha, size = old_main, old.sha256, old.size_bytes
+            if not reuse_main:
+                temporary = service.storage.new_temp(".png")
+                Image.new("RGB", (32, 32), "#112233").save(temporary, "PNG")
+                published = service.storage.publish_file(temporary, ids[0])
+                path, sha, size = published.path, published.sha256, published.size_bytes
+                produced.append(path)
+            prepared = PreparedAsset(
+                type="image",
+                name="错误结果",
+                file_path=path,
+                thumbnail_path=old_thumb,
+                sha256=sha,
+                size_bytes=size,
+                mime_type="image/png",
+                width=32,
+                height=32,
+            )
+            return TaskOutcome(
+                prepared_asset=prepared,
+                result_json=None if reuse_main else {"bad": object()},
+            )
+
+    service.handlers["IMAGE"] = IncorrectHandler()
+    job = service.submit(command(*ids, kind="IMAGE")).task
+    asyncio.run(service.runner.run(job.id))
+    assert service.get(job.id).status == "FAILED"
+    assert old_main.exists(), "不能隔离已登记的旧主文件"
+    assert old_thumb.exists(), "不能隔离共享或已登记的旧缩略图"
+    with service.database.session_scope() as session:
+        records = list(session.scalars(select(Asset)))
+        registered = {p for a in records for p in (a.file_path, a.thumbnail_path) if p}
+    service.storage.quarantine_orphans(registered)
+    assert old_main.exists() and old_thumb.exists()
+    assert all(not path.exists() for path in produced)
+
+
+def test_jobs_routes_have_no_production_fake_submit(client):
+    assert client.post("/api/v1/jobs", json={"kind": "IMAGE"}).status_code == 404
+    active = client.get("/api/v1/jobs/active")
+    assert active.status_code == 200
+    assert active.json()["task"] is None
+    assert active.json()["runtime_state"]["state"] == "IDLE"
+    assert client.get("/api/v1/jobs/99999").status_code == 404
+
+
+def test_response_returns_before_model_finishes(tmp_path):
+    # 真TCP；TestClient会等待BackgroundTasks，不能用于这个时序断言。
+    import json
+    import socket
+    import time
+    from urllib.request import Request, urlopen
+
+    import uvicorn
+    from fastapi import Request as FastAPIRequest
+
+    from app.config import AppSettings
+    from app.main import create_app
+
+    hold = threading.Event()
+    handler = SampleHandler(hold=hold)
+    app = create_app(
+        AppSettings(data_dir=tmp_path / "tcp"),
+        task_handlers={"OPTIMIZE_PROMPTS": handler},
+    )
+
+    @app.post("/api/v1/test-only-submit", status_code=202)
+    def submit(background: BackgroundTasks, request: FastAPIRequest):
+        ids = records(request.app.state.database)
+        submitted = request.app.state.task_service.submit(command(*ids))
+        register_submission(background, submitted)
+        return {"job_id": submitted.task.id}
+
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    server = uvicorn.Server(uvicorn.Config(app, log_level="error", lifespan="on"))
+    thread = threading.Thread(target=lambda: server.run(sockets=[sock]), daemon=True)
+    thread.start()
+    try:
+        for _ in range(200):
+            if server.started:
+                break
+            time.sleep(0.005)
+        origin = f"http://127.0.0.1:{port}"
+        with urlopen(origin + "/api/v1/bootstrap", timeout=2) as response:
+            token = json.load(response)["token"]
+        req = Request(
+            origin + "/api/v1/test-only-submit",
+            data=b"{}",
+            method="POST",
+            headers={"Content-Type": "application/json", "X-Local-Token": token},
+        )
+        with urlopen(req, timeout=2) as response:
+            assert response.status == 202
+            job_id = json.load(response)["job_id"]
+        assert not hold.is_set()
+        with urlopen(origin + f"/api/v1/jobs/{job_id}", timeout=2) as response:
+            assert json.load(response)["status"] in ("PENDING", "RUNNING")
+    finally:
+        hold.set()
+        server.should_exit = True
+        thread.join(timeout=3)
+        sock.close()
+        assert not thread.is_alive()

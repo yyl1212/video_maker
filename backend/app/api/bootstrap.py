@@ -10,18 +10,19 @@ class Capabilities(BaseModel):
     assets: bool = True
     shots: bool = True
     generation: bool = False
+    jobs: bool = True
 
 
 class BootstrapRead(BaseModel):
     token: str
     version: str = "0.1.0"
-    module: str = "M3"
+    module: str = "M2"
     capabilities: Capabilities = Capabilities()
 
 
 class HealthRead(BaseModel):
     status: str = "ok"
-    module: str = "M3"
+    module: str = "M2"
 
 
 @router.get("/bootstrap", response_model=BootstrapRead)

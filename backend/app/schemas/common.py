@@ -22,6 +22,7 @@ class RecordRead(BaseModel):
 class ErrorDetail(InputModel):
     code: str
     message: str
+    active_job_id: int | None = None
 
 
 class ErrorRead(InputModel):

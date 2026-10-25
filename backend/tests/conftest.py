@@ -47,3 +47,26 @@ def video_file(tmp_path):
         capture_output=True,
     )
     return path
+
+
+@pytest.fixture
+def engine(tmp_path):
+    from task_helpers import SampleHandler, records
+
+    from app.config import AppSettings
+    from app.db import Database
+    from app.services.storage import StorageService
+    from app.services.tasks import TaskService
+
+    config = AppSettings(data_dir=tmp_path / "data")
+    db = Database(config)
+    db.initialize()
+    ids = records(db)
+    handler = SampleHandler()
+    service = TaskService(
+        db,
+        StorageService(config.data_dir),
+        {"OPTIMIZE_PROMPTS": handler, "PARSE_SCRIPT": handler},
+    )
+    yield service, ids, handler
+    db.close()

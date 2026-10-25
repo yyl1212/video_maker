@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { UnsavedChangesGuard } from "@/components/UnsavedChangesGuard";
+import { TaskBar } from "@/features/jobs/TaskBar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -52,9 +53,12 @@ export default function RootLayout({
               </span>
               <span className="local-badge">● 本地创作</span>
             </div>
-            <main>{children}</main>
+            <main>
+              <TaskBar />
+              {children}
+            </main>
             <div className="app-footer">
-              映序 · 留住故事的每一个起点<span>M3 · 资产与分镜</span>
+              映序 · 留住故事的每一个起点<span>M2 · 单任务引擎</span>
             </div>
           </div>
         </div>
