@@ -1,5 +1,6 @@
 """本机项目、资产及分镜API；模型生成按后续迭代接入。"""
 
+import asyncio
 import logging
 import secrets
 from contextlib import asynccontextmanager
@@ -9,13 +10,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
-from .api import assets, bootstrap, episodes, jobs, projects, settings, shots
+from .api import assets, bootstrap, episodes, jobs, projects, runtime, settings, shots
 from .config import AppSettings
 from .db import Database
 from .errors import AppError
 from .local_http import is_local_host
 from .models import Asset
 from .schemas.common import ErrorRead
+from .services.recovery import RecoveryService, WorkspaceLock
 from .services.storage import StorageService
 from .services.tasks import TaskService
 from .upload_limit import UploadBodyLimit, is_upload_request
@@ -37,11 +39,21 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        database = Database(config)
+        workspace_lock = WorkspaceLock(config.data_dir).acquire()
+        database, watchdog, task_service = None, None, None
         try:
+            database = Database(config)
             database.initialize()
             app.state.database = database
             app.state.storage = StorageService(config.data_dir)
+            task_service = app.state.task_service = TaskService(
+                database,
+                app.state.storage,
+                task_handlers,
+                task_policy,
+            )
+            app.state.recovery = RecoveryService(task_service)
+            app.state.recovery.startup()
             with database.session_scope() as session:
                 registered = set()
                 for asset in session.scalars(select(Asset)):
@@ -49,15 +61,17 @@ def create_app(
                     if asset.thumbnail_path:
                         registered.add(asset.thumbnail_path)
             app.state.storage.quarantine_orphans(registered)
-            app.state.task_service = TaskService(
-                database,
-                app.state.storage,
-                task_handlers,
-                task_policy,
-            )
+            watchdog = asyncio.create_task(app.state.recovery.watch())
             yield
         finally:
-            database.close()
+            if watchdog:
+                watchdog.cancel()
+                await asyncio.gather(watchdog, return_exceptions=True)
+            if task_service:
+                await task_service.runner.shutdown()
+            if database:
+                database.close()
+            workspace_lock.release()
 
     app = FastAPI(
         title="本地视频制作平台",
@@ -127,6 +141,7 @@ def create_app(
         assets.router,
         shots.router,
         jobs.router,
+        runtime.router,
     ):
         app.include_router(router, prefix="/api/v1")
     return app

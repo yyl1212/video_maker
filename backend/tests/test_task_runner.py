@@ -81,6 +81,28 @@ def test_outcome_publication_is_atomic_and_never_changes_selection(engine, bad_r
             assert task.output_asset_id == assets[0].id
 
 
+def test_heartbeat_updates_without_inventing_progress(engine):
+
+    service, ids, handler = engine
+    service.policy.heartbeat_seconds = 0.01
+    handler.hold = threading.Event()
+    task = service.submit(command(*ids)).task
+
+    async def run():
+        running = asyncio.create_task(service.runner.run(task.id))
+        while not handler.started.is_set():
+            await asyncio.sleep(0.002)
+        before = service.get(task.id).heartbeat_at
+        await asyncio.sleep(0.05)
+        current = service.get(task.id)
+        assert current.heartbeat_at > before
+        assert current.progress is None
+        handler.hold.set()
+        await running
+
+    asyncio.run(run())
+
+
 def test_jobs_routes_have_no_production_fake_submit(client):
     assert client.post("/api/v1/jobs", json={"kind": "IMAGE"}).status_code == 404
     active = client.get("/api/v1/jobs/active")

@@ -3,6 +3,7 @@
 import math
 import threading
 from dataclasses import asdict, dataclass, field
+from datetime import timedelta
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Protocol
@@ -111,6 +112,19 @@ class TaskHandler(Protocol):
 @dataclass
 class TaskPolicy:
     heartbeat_seconds: float = 5
+    pending_seconds: float = 30
+    stale_seconds: float = 30
+    sweep_seconds: float = 5
+    cancel_grace_seconds: float = 0.25
+    budgets: dict[str, float] = field(
+        default_factory=lambda: {
+            "PARSE_SCRIPT": 480,
+            "OPTIMIZE_PROMPTS": 480,
+            "IMAGE": 570,
+            "VIDEO": 540,
+            "EXPORT": 540,
+        }
+    )
 
 
 @dataclass
@@ -294,9 +308,17 @@ class TaskService:
                     return None
                 task.status, task.execution_owner = "RUNNING", self.owner
                 task.started_at = task.heartbeat_at = utc_now()
+                task.deadline_at = task.started_at + timedelta(
+                    seconds=self.policy.budgets[task.kind]
+                )
                 task.stage = "准备任务输入"
                 session.flush()
-                record = (task.kind, task.input_hash, task.input_snapshot)
+                record = (
+                    task.kind,
+                    task.input_hash,
+                    task.input_snapshot,
+                    task.deadline_at,
+                )
             self.gate.running.add(task_id)
             return record
 
@@ -320,6 +342,14 @@ class TaskService:
                     raise AppError(422, "INVALID_PROGRESS", "任务进度不合法")
                 task.stage, task.progress = stage, progress
             if execution is not None:
+                if (
+                    execution.get("remote", {}).get("started")
+                    and not execution.get("remote", {}).get("finished")
+                    and (task.deadline_at and utc_now() >= task.deadline_at)
+                ):
+                    raise AppError(
+                        409, "DEADLINE_EXCEEDED", "任务已超过总截止，不能发起模型请求"
+                    )
                 task.execution_json = {**task.execution_json, **execution}
 
     @staticmethod
@@ -356,11 +386,24 @@ class TaskService:
                     ):
                         return
                     remote = task.execution_json.get("remote", {})
+                    local = task.execution_json.get("local", {})
                     uncertain = uncertain or bool(
                         remote.get("started") and not remote.get("finished")
                     )
-                    backend = remote.get("backend", "local")
+                    local_unknown = bool(
+                        local.get("started") and not local.get("finished")
+                    )
+                    uncertain = uncertain or local_unknown
+                    backend = (
+                        remote.get("backend", "local")
+                        if remote.get("started") and not remote.get("finished")
+                        else ("ffmpeg" if local_unknown else "local")
+                    )
                     if outcome is not None:
+                        if task.deadline_at and utc_now() >= task.deadline_at:
+                            raise AppError(
+                                409, "DEADLINE_EXCEEDED", "任务已超过总截止，结果未发布"
+                            )
                         prepared = outcome.prepared_asset
                         if task.kind in ("IMAGE", "VIDEO", "EXPORT"):
                             if prepared is None or prepared.type != (
@@ -394,6 +437,11 @@ class TaskService:
                             )
                         task.result_json, task.status = outcome.result_json, "DONE"
                         task.stage, task.progress = "已完成", 1
+                        session.flush()
+                        if task.deadline_at and utc_now() >= task.deadline_at:
+                            raise AppError(
+                                409, "DEADLINE_EXCEEDED", "任务已超过总截止，结果未发布"
+                            )
                     else:
                         task.status, task.stage = "FAILED", "未完成"
                         task.error_code, task.error_message = error_code, error_message
