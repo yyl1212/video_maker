@@ -16,18 +16,23 @@ class Capabilities(BaseModel):
 class BootstrapRead(BaseModel):
     token: str
     version: str = "0.1.0"
-    module: str = "M2"
+    module: str = "M5"
     capabilities: Capabilities = Capabilities()
 
 
 class HealthRead(BaseModel):
     status: str = "ok"
-    module: str = "M2"
+    module: str = "M5"
 
 
 @router.get("/bootstrap", response_model=BootstrapRead)
 def bootstrap(request: Request):
-    return BootstrapRead(token=request.app.state.token)
+    return BootstrapRead(
+        token=request.app.state.token,
+        capabilities=Capabilities(
+            generation="IMAGE" in request.app.state.task_service.handlers
+        ),
+    )
 
 
 @router.get("/health", response_model=HealthRead)

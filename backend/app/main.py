@@ -1,4 +1,4 @@
-"""本机项目、资产及分镜API；模型生成按后续迭代接入。"""
+"""本机项目、资产、分镜及异步首帧API。"""
 
 import asyncio
 import logging
@@ -17,6 +17,7 @@ from .errors import AppError
 from .local_http import is_local_host
 from .models import Asset
 from .schemas.common import ErrorRead
+from .services.generation import ImageGenerationHandler
 from .services.recovery import RecoveryService, WorkspaceLock
 from .services.storage import StorageService
 from .services.tasks import TaskService
@@ -49,7 +50,11 @@ def create_app(
             task_service = app.state.task_service = TaskService(
                 database,
                 app.state.storage,
-                task_handlers,
+                (
+                    {"IMAGE": ImageGenerationHandler(database, app.state.storage)}
+                    if task_handlers is None
+                    else task_handlers
+                ),
                 task_policy,
             )
             app.state.recovery = RecoveryService(task_service)

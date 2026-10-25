@@ -5,6 +5,7 @@ description = "Apple Silicon 本地视频制作平台后端"
 requires-python = ">=3.13"
 dependencies = [
   "alembic>=1.14,<2",
+  "drawthings-py==0.4.0",
   "fastapi>=0.115,<1",
   "pillow>=12,<14",
   "psutil>=7,<9",

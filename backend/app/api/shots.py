@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, BackgroundTasks, Request
 
+from app.models import Shot
+from app.schemas.generation import ImageJobSubmit
 from app.schemas.shots import (
     ReferencesUpdate,
     SelectionUpdate,
@@ -10,7 +12,10 @@ from app.schemas.shots import (
     ShotRead,
     ShotReorder,
 )
+from app.schemas.tasks import TaskAccepted, TaskSubmitCommand
+from app.services.projects import get_record
 from app.services.shots import ShotService
+from app.services.tasks import register_submission
 
 router = APIRouter(tags=["shots"])
 
@@ -63,4 +68,37 @@ def selection(request: Request, shot_id: int, data: SelectionUpdate):
         data,
         data.shot_version,
         data.selection_version,
+    )
+
+
+@router.post(
+    "/shots/{shot_id}/image-jobs", response_model=TaskAccepted, status_code=202
+)
+def generate_image(
+    request: Request, shot_id: int, data: ImageJobSubmit, background: BackgroundTasks
+):
+    # 这里只解析稳定归属；幂等重放、可写性、全部版本及全局槽由TaskService原子处理。
+    with request.app.state.database.session_scope() as session:
+        shot = get_record(session, Shot, shot_id)
+        from app.models import Episode
+
+        episode = get_record(session, Episode, shot.episode_id)
+        project_id, episode_id = episode.project_id, episode.id
+    command = TaskSubmitCommand(
+        project_id=project_id,
+        episode_id=episode_id,
+        shot_id=shot_id,
+        kind="IMAGE",
+        idempotency_key=str(data.idempotency_key),
+        expected_project_version=data.expected_project_version,
+        expected_episode_version=data.expected_episode_version,
+        expected_shot_version=data.expected_shot_version,
+        parameters={"image_input_hash": data.expected_image_input_hash},
+    )
+    submission = request.app.state.task_service.submit(command)
+    register_submission(background, submission)
+    return TaskAccepted(
+        job_id=submission.task.id,
+        status=submission.task.status,
+        poll_url=f"/api/v1/jobs/{submission.task.id}",
     )

@@ -128,6 +128,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/settings/test-connection": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Test Connection */
+    post: operations["test_connection_api_v1_settings_test_connection_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/projects/{project_id}/assets": {
     parameters: {
       query?: never;
@@ -280,6 +297,23 @@ export interface paths {
     /** Selection */
     put: operations["selection_api_v1_shots__shot_id__selection_put"];
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}/image-jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Generate Image */
+    post: operations["generate_image_api_v1_shots__shot_id__image_jobs_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -467,7 +501,7 @@ export interface components {
       version: string;
       /**
        * Module
-       * @default M2
+       * @default M5
        */
       module: string;
       /**
@@ -520,6 +554,10 @@ export interface components {
        * @default
        */
       description: string;
+    };
+    /** ConnectionTest */
+    ConnectionTest: {
+      image: components["schemas"]["ImageSettings"];
     };
     /** DeleteAsset */
     DeleteAsset: {
@@ -594,9 +632,44 @@ export interface components {
       status: string;
       /**
        * Module
-       * @default M2
+       * @default M5
        */
       module: string;
+    };
+    /** ImageConnectionRead */
+    ImageConnectionRead: {
+      /** Models */
+      models: components["schemas"]["ImageModelRead"][];
+      /**
+       * Message
+       * @default 已连接本机 Draw Things；未执行生成
+       */
+      message: string;
+    };
+    /** ImageJobSubmit */
+    ImageJobSubmit: {
+      /**
+       * Idempotency Key
+       * Format: uuid
+       */
+      idempotency_key: string;
+      /** Expected Project Version */
+      expected_project_version: number;
+      /** Expected Episode Version */
+      expected_episode_version: number;
+      /** Expected Shot Version */
+      expected_shot_version: number;
+      /** Expected Image Input Hash */
+      expected_image_input_hash: string;
+    };
+    /** ImageModelRead */
+    ImageModelRead: {
+      /** File */
+      file: string;
+      /** Name */
+      name: string;
+      /** Supported */
+      supported: boolean;
     };
     /** ImageSettings */
     ImageSettings: {
@@ -1019,6 +1092,18 @@ export interface components {
       preset?: ("quality" | "fast") | null;
       /** Seed */
       seed?: number | null;
+    };
+    /** TaskAccepted */
+    TaskAccepted: {
+      /** Job Id */
+      job_id: number;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "PENDING" | "RUNNING" | "DONE" | "FAILED";
+      /** Poll Url */
+      poll_url: string;
     };
     /** TaskDetail */
     TaskDetail: {
@@ -2331,6 +2416,111 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SettingsRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  test_connection_api_v1_settings_test_connection_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ConnectionTest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ImageConnectionRead"];
         };
       };
       /** @description Forbidden */
@@ -3814,6 +4004,113 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ShotRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  generate_image_api_v1_shots__shot_id__image_jobs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ImageJobSubmit"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskAccepted"];
         };
       };
       /** @description Forbidden */

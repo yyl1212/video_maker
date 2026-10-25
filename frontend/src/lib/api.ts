@@ -28,6 +28,15 @@ export type ShotEditable = Required<
 >;
 export type ReferenceInput = components["schemas"]["ReferenceInput"];
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
 let sessionPromise: Promise<string> | null = null;
 
 async function sessionToken(): Promise<string> {
@@ -87,7 +96,7 @@ export async function apiRequest<T>(
         message = detail.message;
       }
     }
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
   return payload as T;
 }

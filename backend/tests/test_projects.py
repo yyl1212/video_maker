@@ -236,7 +236,8 @@ def test_settings_are_local_versioned_and_do_not_generate(client):
         },
     )
     assert invalid.status_code == 422
-    assert client.get("/api/v1/bootstrap").json()["capabilities"]["generation"] is False
+    assert client.get("/api/v1/bootstrap").json()["capabilities"]["generation"] is True
+    assert client.get("/api/v1/jobs/active").json()["task"] is None
 
 
 def test_database_survives_app_restart(tmp_path):
