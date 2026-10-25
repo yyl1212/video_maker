@@ -183,6 +183,8 @@ def main():
                 "selection_version": shot["selection"]["version"],
                 field: asset["id"],
                 "confirm_uploaded": True,
+                "expected_image_input_hash": shot["image_input_hash"],
+                "expected_video_input_hash": shot["video_input_hash"],
             },
         )
     assert shot["video_ready"] and not shot["selection"]["video_stale"]

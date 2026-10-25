@@ -5,7 +5,18 @@ import { apiRequest, type AssetRead, type ShotRead } from "@/lib/api";
 import { useFormAction } from "@/components/useFormAction";
 import { MediaPreview } from "@/features/assets/MediaPreview";
 
-type Candidate = { id: number; shotVersion: number; selectionVersion: number };
+type Candidate = {
+  id: number;
+  shotVersion: number;
+  selectionVersion: number;
+  inputHash: string | null;
+};
+type ClearChoice = {
+  kind: "image" | "video";
+  assetId: number;
+  shotVersion: number;
+  selectionVersion: number;
+};
 
 export function SelectionPanel({
   shot,
@@ -20,7 +31,7 @@ export function SelectionPanel({
   const [frame, setFrame] = useState<Candidate | null>(null);
   const [video, setVideo] = useState<Candidate | null>(null);
   const [confirmed, setConfirmed] = useState(false);
-  const [clear, setClear] = useState<"image" | "video" | null>(null);
+  const [clear, setClear] = useState<ClearChoice | null>(null);
   const action = useFormAction<ShotRead>(`selection:${shot.id}`, (s) => {
     setFrame(null);
     setVideo(null);
@@ -37,20 +48,45 @@ export function SelectionPanel({
   const selectedVideo = assets.find(
     (a) => a.id === shot.selection.selected_video_asset_id,
   );
-  function candidate(value: string) {
+  const clearStale =
+    clear !== null &&
+    (clear.shotVersion !== shot.version ||
+      clear.selectionVersion !== shot.selection.version ||
+      clear.assetId !==
+        (clear.kind === "image"
+          ? shot.selection.first_frame_asset_id
+          : shot.selection.selected_video_asset_id));
+  function askClear(kind: "image" | "video") {
+    const assetId =
+      kind === "image"
+        ? shot.selection.first_frame_asset_id
+        : shot.selection.selected_video_asset_id;
+    if (assetId !== null)
+      setClear({
+        kind,
+        assetId,
+        shotVersion: shot.version,
+        selectionVersion: shot.selection.version,
+      });
+  }
+  function candidate(value: string, kind: "image" | "video") {
     return value
       ? {
           id: Number(value),
           shotVersion: shot.version,
           selectionVersion: shot.selection.version,
+          inputHash:
+            kind === "image" ? shot.image_input_hash : shot.video_input_hash,
         }
       : null;
   }
-  function blocked(value: Candidate | null) {
+  function blocked(value: Candidate | null, kind: "image" | "video") {
     if (
       !value ||
       value.shotVersion !== shot.version ||
-      value.selectionVersion !== shot.selection.version
+      value.selectionVersion !== shot.selection.version ||
+      value.inputHash !==
+        (kind === "image" ? shot.image_input_hash : shot.video_input_hash)
     )
       return true;
     return (
@@ -58,20 +94,34 @@ export function SelectionPanel({
       !confirmed
     );
   }
-  function adopt(kind: "image" | "video", value: Candidate | null) {
+  function adopt(
+    kind: "image" | "video",
+    value: Candidate | null,
+    removal?: ClearChoice,
+  ) {
     void action.run(
       (signal) =>
         apiRequest<ShotRead>(`/shots/${shot.id}/selection`, {
           method: "PUT",
           signal,
           body: {
-            shot_version: value?.shotVersion ?? shot.version,
+            shot_version:
+              value?.shotVersion ?? removal?.shotVersion ?? shot.version,
             selection_version:
-              value?.selectionVersion ?? shot.selection.version,
+              value?.selectionVersion ??
+              removal?.selectionVersion ??
+              shot.selection.version,
             [kind === "image"
               ? "first_frame_asset_id"
               : "selected_video_asset_id"]: value?.id ?? null,
             confirm_uploaded: confirmed,
+            ...(value
+              ? {
+                  [kind === "image"
+                    ? "expected_image_input_hash"
+                    : "expected_video_input_hash"]: value.inputHash,
+                }
+              : {}),
           },
         }),
       value ? "已明确采用此版本" : "已取消采用",
@@ -106,7 +156,7 @@ export function SelectionPanel({
           id={`${id}-frame`}
           value={frame?.id ?? ""}
           onChange={(e) => {
-            setFrame(candidate(e.target.value));
+            setFrame(candidate(e.target.value, "image"));
             setConfirmed(false);
           }}
         >
@@ -122,13 +172,13 @@ export function SelectionPanel({
         <div className="form-footer">
           <button
             className="button secondary small"
-            disabled={blocked(frame)}
+            disabled={blocked(frame, "image")}
             onClick={() => adopt("image", frame)}
           >
             采用首帧
           </button>
           {shot.selection.first_frame_asset_id && (
-            <button className="text-button" onClick={() => setClear("image")}>
+            <button className="text-button" onClick={() => askClear("image")}>
               取消首帧采用
             </button>
           )}
@@ -152,7 +202,7 @@ export function SelectionPanel({
           id={`${id}-video`}
           value={video?.id ?? ""}
           onChange={(e) => {
-            setVideo(candidate(e.target.value));
+            setVideo(candidate(e.target.value, "video"));
             setConfirmed(false);
           }}
         >
@@ -168,13 +218,13 @@ export function SelectionPanel({
         <div className="form-footer">
           <button
             className="button secondary small"
-            disabled={blocked(video) || !shot.video_ready}
+            disabled={blocked(video, "video") || !shot.video_ready}
             onClick={() => adopt("video", video)}
           >
             采用视频
           </button>
           {shot.selection.selected_video_asset_id && (
-            <button className="text-button" onClick={() => setClear("video")}>
+            <button className="text-button" onClick={() => askClear("video")}>
               取消视频采用
             </button>
           )}
@@ -191,10 +241,17 @@ export function SelectionPanel({
         )}
         {clear && (
           <div className="notice">
-            确认取消采用此{clear === "image" ? "首帧" : "视频"}？原文件会保留。
+            确认取消采用此{clear.kind === "image" ? "首帧" : "视频"}（素材#
+            {clear.assetId}）？原文件会保留。
+            {clearStale && (
+              <p>取消确认已失效，镜头或采用版本发生变化，请返回重新核对。</p>
+            )}
             <button
               className="button secondary small"
-              onClick={() => adopt(clear, null)}
+              disabled={clearStale}
+              onClick={() => {
+                if (!clearStale) adopt(clear.kind, null, clear);
+              }}
             >
               确认取消采用
             </button>
@@ -206,10 +263,12 @@ export function SelectionPanel({
       </fieldset>
       {((frame &&
         (frame.shotVersion !== shot.version ||
-          frame.selectionVersion !== shot.selection.version)) ||
+          frame.selectionVersion !== shot.selection.version ||
+          frame.inputHash !== shot.image_input_hash)) ||
         (video &&
           (video.shotVersion !== shot.version ||
-            video.selectionVersion !== shot.selection.version))) && (
+            video.selectionVersion !== shot.selection.version ||
+            video.inputHash !== shot.video_input_hash))) && (
         <p className="notice">镜头或采用版本已更新，请核对后重新选择。</p>
       )}
       {(action.error || action.message) && (

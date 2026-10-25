@@ -170,7 +170,7 @@
 - [x] 增加指纹测试：风格/实际参考/首帧变化会使相关结果过期；标题、重排及未使用资产变化不误伤；上传采用绑定当前输入，旧生成结果不可绕过当前指纹采纳。
 - [x] 跑失败测试后实现；ShotRead聚合Selection和references，不重复持久化reference_asset_ids；UI保留未保存修改并明确展示“旧版本”。
 - [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_shots.py tests/test_selection.py tests/test_fingerprints.py -q`；前端执行 shots 测试及typecheck。
-- [ ] 审查并提交 `feat: add shot references and explicit asset selection`，等待 M3 确认。
+- [x] 审查并提交 `feat: add shot references and explicit asset selection`，等待 M3 确认。
 
 ## M4：本地 LLM 解析和 Prompt 扩写
 

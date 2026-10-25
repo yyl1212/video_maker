@@ -136,6 +136,7 @@ class AssetService:
             )
             if is_video:
                 info = FFmpegService().probe(raw)
+                FFmpegService().validate_decoding(raw)
                 FFmpegService().thumbnail(raw, thumb)
                 source = raw.with_suffix(".mp4")
                 raw.rename(source)

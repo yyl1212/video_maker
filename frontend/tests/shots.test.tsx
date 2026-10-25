@@ -1,5 +1,11 @@
 import { beforeEach, expect, test, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { ShotEditor } from "@/features/shots/ShotEditor";
 import { ReferencePicker } from "@/features/shots/ReferencePicker";
 import { SelectionPanel } from "@/features/shots/SelectionPanel";
@@ -124,6 +130,7 @@ test("采用上传首帧须明确确认，旧视频不会被清除", async () =>
     selection_version: 1,
     first_frame_asset_id: 4,
     confirm_uploaded: true,
+    expected_image_input_hash: "input1",
   });
 });
 
@@ -157,4 +164,115 @@ test("分镜列表使用读取到的剧集版本重排", async () => {
     expected_version: 6,
     shot_ids: [8, 3],
   });
+});
+
+test("旧刷新响应不得回退刚保存的分镜和已清除的草稿", async () => {
+  let completeRefresh: ((value: Response) => void) | undefined;
+  let listReads = 0;
+  const updated = { ...shot, raw_description: "刚保存的新画面", version: 2 };
+  vi.mocked(fetch).mockImplementation(async (input, init) => {
+    const url = String(input);
+    if (url.endsWith("/bootstrap"))
+      return Response.json({ token: "local-token" });
+    if (init?.method === "PATCH") return Response.json(updated);
+    if (url.endsWith("/assets")) return Response.json([]);
+    if (url.endsWith("/shots")) {
+      listReads += 1;
+      if (listReads === 2)
+        return new Promise<Response>((resolve) => {
+          completeRefresh = resolve;
+        });
+      return Response.json({ episode_version: 1, shots: [shot] });
+    }
+    return Response.json(updated);
+  });
+  render(<ShotList project={project} episodeId={2} readonly={false} />);
+  await screen.findByLabelText("画面描述");
+  fireEvent.change(screen.getByLabelText("画面描述"), {
+    target: { value: "刚保存的新画面" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "刷新素材与分镜" }));
+  fireEvent.click(screen.getByRole("button", { name: "保存分镜文字与参数" }));
+  await screen.findByText("分镜文字与参数已保存");
+  expect(useWorkbenchStore.getState().drafts["shot:3"]).toBeUndefined();
+  await act(async () => {
+    completeRefresh?.(Response.json({ episode_version: 1, shots: [shot] }));
+  });
+  expect(screen.getByLabelText("画面描述")).toHaveValue("刚保存的新画面");
+});
+
+test("取消采用确认不得升级到后来选中的素材版本", () => {
+  const first = {
+    ...shot,
+    selection: {
+      ...shot.selection,
+      version: 2,
+      first_frame_asset_id: image.id,
+    },
+  };
+  const view = render(
+    <SelectionPanel shot={first} assets={[image]} onSaved={() => {}} />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "取消首帧采用" }));
+  view.rerender(
+    <SelectionPanel
+      shot={{
+        ...first,
+        selection: {
+          ...first.selection,
+          version: 3,
+          first_frame_asset_id: 9,
+        },
+      }}
+      assets={[image, { ...image, id: 9, name: "另一首帧" }]}
+      onSaved={() => {}}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "确认取消采用" })).toBeDisabled();
+  expect(screen.getByText(/取消确认已失效/)).toBeVisible();
+});
+
+test("刷新旧选择快照不得撤回刚采用的首帧", async () => {
+  let completeRefresh: ((value: Response) => void) | undefined;
+  let listReads = 0;
+  const adopted = {
+    ...shot,
+    selection: {
+      ...shot.selection,
+      version: 2,
+      first_frame_asset_id: image.id,
+    },
+  };
+  vi.mocked(fetch).mockImplementation(async (input, init) => {
+    const url = String(input);
+    if (url.endsWith("/bootstrap"))
+      return Response.json({ token: "local-token" });
+    if (init?.method === "PUT") return Response.json(adopted);
+    if (url.endsWith("/assets")) return Response.json([image]);
+    if (url.endsWith("/shots")) {
+      listReads += 1;
+      if (listReads === 2)
+        return new Promise<Response>((resolve) => {
+          completeRefresh = resolve;
+        });
+      return Response.json({ episode_version: 1, shots: [shot] });
+    }
+    return Response.json(adopted);
+  });
+  render(<ShotList project={project} episodeId={2} readonly={false} />);
+  await screen.findByLabelText("首帧版本");
+  fireEvent.change(screen.getByLabelText("首帧版本"), {
+    target: { value: "4" },
+  });
+  fireEvent.click(
+    screen.getByRole("checkbox", { name: "确认上传素材适用于当前镜头输入" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "刷新素材与分镜" }));
+  fireEvent.click(screen.getByRole("button", { name: "采用首帧" }));
+  await screen.findByText("已明确采用此版本");
+  await act(async () => {
+    completeRefresh?.(Response.json({ episode_version: 1, shots: [shot] }));
+  });
+  expect(screen.queryByText("尚未采用首帧")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "取消首帧采用" })).toBeEnabled();
 });

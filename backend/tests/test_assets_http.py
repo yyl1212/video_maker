@@ -193,3 +193,45 @@ def test_truncated_image_is_invalid_input_and_not_storage_failure(client, trim):
         files={"file": ("broken.png", image_bytes()[:-trim], "image/png")},
     )
     assert response.status_code == 422
+
+
+def test_tail_truncated_mp4_with_valid_metadata_is_rejected(client, tmp_path):
+    import subprocess
+
+    path = tmp_path / "faststart-original.mp4"
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc2=s=160x96:r=24",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=440:sample_rate=48000",
+            "-t",
+            "4",
+            "-c:v",
+            "libx264",
+            "-c:a",
+            "aac",
+            "-movflags",
+            "+faststart",
+            str(path),
+        ],
+        check=True,
+        capture_output=True,
+        timeout=15,
+    )
+    truncated = path.read_bytes()[: path.stat().st_size // 2]
+    project = make_project(client)
+    result = client.post(
+        f"/api/v1/projects/{project['id']}/assets",
+        files={"file": ("tail-broken.mp4", truncated, "video/mp4")},
+    )
+    assert result.status_code == 422
+    assert client.get(f"/api/v1/projects/{project['id']}/assets").json() == []
+    assert not list(client.app.state.storage.media.rglob("*.mp4"))

@@ -206,7 +206,9 @@ READY 条件：描述、image_prompt 非空，角色及参考关联有效，生�
 | first_frame_input_hash / video_input_hash | nullable String(64)，采用时绑定的当前内容指纹 |
 | version / updated_at | Integer / DateTime |
 
-采用操作同时检查 Shot.version 和 Selection.version。首帧和视频都必须来自同项目，类型正确；生成资产还需来源镜头一致及 Task 成功。选择另一张首帧不删除旧视频，但原视频立刻按实际来源标记过期。人工上传资产采用时绑定当前指纹；之后输入变化同样产生过期提示。
+采用操作同时检查Shot.version和Selection.version。首帧和视频都必须来自同项目，类型正确；生成资产还需来源镜头一致及Task成功。选择另一张首帧不删除旧视频，但原视频立刻按实际来源标记过期。人工上传资产采用时另须提交用户已查看的expected_image_input_hash或expected_video_input_hash，事务内与当前指纹比较后绑定；相关项目风格、角色或默认模型参数已变化时返回409，要求刷新并重新确认，不能暗中绑定新输入。缺少相关指纹返回422。取消采用冻结原资产及双版本；前端刷新后确认不得升级到新选择版本。
+
+2026-10-25 M3兼容性审查：以上输入确认前置条件来自独立代码审查，M3尚未合并发布，前后端与OpenAPI契约同批更新；不修改持久化结构或迁移数据。已有M1项目/剧集接口保持原行为。
 
 ### 5.7 Asset
 

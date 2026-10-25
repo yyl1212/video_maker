@@ -22,7 +22,7 @@ class MediaInfo:
 
 
 class FFmpegService:
-    def run(self, arguments: list[str], timeout: int = 30) -> bytes:
+    def run(self, arguments: list[str], timeout: float = 30) -> bytes:
         try:
             process = subprocess.Popen(
                 arguments,
@@ -131,4 +131,34 @@ class FFmpegService:
                 "-y",
                 str(target),
             ]
+        )
+
+    def validate_decoding(self, source: Path) -> None:
+        # 元数据和首帧完整不能证明后半段音画可解码，发布前检查完整输入。
+        self.run(
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-nostdin",
+                "-xerror",
+                "-err_detect",
+                "explode",
+                "-protocol_whitelist",
+                "file",
+                "-enable_drefs",
+                "0",
+                "-f",
+                "mov",
+                "-i",
+                str(source),
+                "-map",
+                "0:V:0",
+                "-map",
+                "0:a?",
+                "-f",
+                "null",
+                "-",
+            ],
+            timeout=20,
         )

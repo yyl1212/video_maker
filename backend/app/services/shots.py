@@ -362,6 +362,23 @@ class ShotService:
                             "CONFIRM_UPLOAD",
                             "请明确确认上传素材适用于当前镜头输入",
                         )
+                    viewed_hash = (
+                        selection.expected_image_input_hash
+                        if kind == "image"
+                        else selection.expected_video_input_hash
+                    )
+                    if viewed_hash is None:
+                        raise AppError(
+                            422,
+                            "INPUT_CONFIRMATION_REQUIRED",
+                            "请读取最新分镜，并确认上传素材适用的输入版本",
+                        )
+                    if viewed_hash != fingerprint:
+                        raise AppError(
+                            409,
+                            "INPUT_CHANGED",
+                            "镜头相关输入已变化，请刷新分镜并重新核对上传素材",
+                        )
                 else:
                     task = session.get(Task, asset.source_task_id)
                     if (

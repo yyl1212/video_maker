@@ -4007,6 +4007,30 @@
             "type": "boolean",
             "title": "Confirm Uploaded",
             "default": false
+          },
+          "expected_image_input_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Image Input Hash"
+          },
+          "expected_video_input_hash": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Video Input Hash"
           }
         },
         "additionalProperties": false,

@@ -668,6 +668,10 @@ export interface components {
        * @default false
        */
       confirm_uploaded: boolean;
+      /** Expected Image Input Hash */
+      expected_image_input_hash?: string | null;
+      /** Expected Video Input Hash */
+      expected_video_input_hash?: string | null;
     };
     /** SettingsRead */
     SettingsRead: {

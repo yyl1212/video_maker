@@ -112,6 +112,12 @@ class SelectionUpdate(InputModel):
     first_frame_asset_id: PositiveId | None = None
     selected_video_asset_id: PositiveId | None = None
     confirm_uploaded: bool = Field(default=False, strict=True)
+    expected_image_input_hash: str | None = Field(
+        default=None, pattern="^[0-9a-f]{64}$"
+    )
+    expected_video_input_hash: str | None = Field(
+        default=None, pattern="^[0-9a-f]{64}$"
+    )
 
     @model_validator(mode="after")
     def has_selection(self):

@@ -15,6 +15,27 @@ import { ShotEditor } from "./ShotEditor";
 import { ReferencePicker } from "./ReferencePicker";
 import { SelectionPanel } from "./SelectionPanel";
 
+function mergeSnapshot(
+  current: ShotListRead | null,
+  incoming: ShotListRead,
+): ShotListRead {
+  if (!current) return incoming;
+  if (incoming.episode_version < current.episode_version) return current;
+  const known = new Map(current.shots.map((shot) => [shot.id, shot]));
+  return {
+    ...incoming,
+    shots: incoming.shots.map((shot) => {
+      const saved = known.get(shot.id);
+      // 普通编辑不会递增Episode.version；采用也有独立版本，必须整体保留较新DTO。
+      return saved &&
+        (saved.version > shot.version ||
+          saved.selection.version > shot.selection.version)
+        ? saved
+        : shot;
+    }),
+  };
+}
+
 export function ShotList({
   project,
   episodeId,
@@ -41,14 +62,14 @@ export function ShotList({
       ),
   );
   const action = useFormAction<ShotListRead>(`shot-list:${episodeId}`, (s) => {
-    setListing(s);
+    setListing((current) => mergeSnapshot(current, s));
     setConfirmDelete(false);
     onEpisodeChanged?.();
   });
   const refresh = useFormAction<{ list: ShotListRead; assets: AssetRead[] }>(
     `shot-refresh:${episodeId}`,
     (s) => {
-      setListing(s.list);
+      setListing((current) => mergeSnapshot(current, s.list));
       setAssets(s.assets);
       onEpisodeChanged?.();
     },

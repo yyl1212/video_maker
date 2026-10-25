@@ -15,6 +15,8 @@ def select_asset(client, shot, *, image=None, video=None, confirm=True, **versio
                 "selection_version", shot["selection"]["version"]
             ),
             "confirm_uploaded": confirm,
+            "expected_image_input_hash": shot["image_input_hash"],
+            "expected_video_input_hash": shot["video_input_hash"],
             **({"first_frame_asset_id": image} if image is not None else {}),
             **({"selected_video_asset_id": video} if video is not None else {}),
         },
@@ -125,3 +127,77 @@ def test_archived_episode_and_deleted_shot_reject_selection(client):
         json={"expected_version": current["version"], "archived": True},
     )
     assert select_asset(client, shot, image=asset["id"]).status_code == 409
+
+
+def test_uploaded_adoption_checks_viewed_input_hash_when_project_changes(client):
+    project, episode = workspace(client)
+    shot = create_shot(client, episode["id"]).json()
+    asset = upload_image(client, project["id"]).json()
+    request = {
+        "shot_version": shot["version"],
+        "selection_version": shot["selection"]["version"],
+        "first_frame_asset_id": asset["id"],
+        "confirm_uploaded": True,
+        "expected_image_input_hash": shot["image_input_hash"],
+    }
+    # 项目输入变化不递增Shot/Selection.version，必须额外核对用户看到的指纹。
+    client.patch(
+        f"/api/v1/projects/{project['id']}",
+        json={"expected_version": 1, "style_anchor": "水墨"},
+    )
+    response = client.put(f"/api/v1/shots/{shot['id']}/selection", json=request)
+    assert response.status_code == 409
+    latest = client.get(f"/api/v1/shots/{shot['id']}").json()
+    assert latest["version"] == shot["version"]
+    assert latest["selection"]["first_frame_asset_id"] is None
+    assert latest["image_input_hash"] != shot["image_input_hash"]
+    request["expected_image_input_hash"] = latest["image_input_hash"]
+    assert (
+        client.put(f"/api/v1/shots/{shot['id']}/selection", json=request).status_code
+        == 200
+    )
+
+
+def test_uploaded_adoption_requires_input_confirmation_hash(client):
+    project, episode = workspace(client)
+    shot = create_shot(client, episode["id"]).json()
+    asset = upload_image(client, project["id"]).json()
+    result = client.put(
+        f"/api/v1/shots/{shot['id']}/selection",
+        json={
+            "shot_version": 1,
+            "selection_version": 1,
+            "first_frame_asset_id": asset["id"],
+            "confirm_uploaded": True,
+        },
+    )
+    assert result.status_code == 422
+
+
+def test_video_adoption_checks_viewed_hash_after_default_parameters_change(
+    client, video_file
+):
+    project, episode = workspace(client)
+    shot = create_shot(client, episode["id"]).json()
+    frame = upload_image(client, project["id"]).json()
+    shot = select_asset(client, shot, image=frame["id"]).json()
+    with video_file.open("rb") as source:
+        video = client.post(
+            f"/api/v1/projects/{project['id']}/assets",
+            files={"file": ("原创.mp4", source, "video/mp4")},
+        ).json()
+    settings = client.get("/api/v1/settings").json()
+    settings["video"]["seed"] += 1
+    client.put(
+        "/api/v1/settings",
+        json={
+            "expected_version": settings["version"],
+            **{key: settings[key] for key in ("text", "image", "video")},
+        },
+    )
+    assert select_asset(client, shot, video=video["id"]).status_code == 409
+    latest = client.get(f"/api/v1/shots/{shot['id']}").json()
+    assert latest["version"] == shot["version"]
+    assert latest["selection"]["version"] == shot["selection"]["version"]
+    assert latest["selection"]["selected_video_asset_id"] is None
+    assert select_asset(client, latest, video=video["id"]).status_code == 200
