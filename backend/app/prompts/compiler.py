@@ -5,6 +5,7 @@ import json
 from dataclasses import dataclass
 
 from app.image_profile import IMAGE_PROFILE
+from app.media.video_profile import VIDEO_ENCODING
 
 COMPILER_VERSION = "1"
 
@@ -74,13 +75,25 @@ def compile_image(snapshot: dict) -> CompiledPrompt:
 
 def compile_video(snapshot: dict) -> CompiledPrompt:
     frames = actual_video_frames(snapshot["duration_seconds"])
-    parameters = {**snapshot.get("video_settings", {}), "fps": 24, "num_frames": frames}
-    prompt = "\n".join(
-        [
-            "[Video]\n" + snapshot.get("video_prompt", "").strip(),
-            "[Audio]\n" + snapshot.get("audio_prompt", "").strip(),
-            "[Dialogue]\n" + snapshot.get("dialogue", "").strip(),
-        ]
+    parameters = {
+        **snapshot.get("video_settings", {}),
+        "fps": 24,
+        "num_frames": frames,
+        "encoding": VIDEO_ENCODING,
+    }
+    prompt = (
+        "For the target video, at 0.00 seconds, <Picture 1> is the exact first frame. "
+        "Preserve the same character, appearance and scene. One continuous shot.\n\n"
+        "integrated_multimodal_description:\n[Shot 1] "
+        + snapshot.get("video_prompt", "").strip()
+        + "\n\noverall_soundscape:\n"
+        + snapshot.get("audio_prompt", "").strip()
+        + (
+            "\nSpoken dialogue (verbatim): " + snapshot["dialogue"].strip()
+            if snapshot.get("dialogue", "").strip()
+            else "\nNo dialogue."
+        )
+        + "\n\nnon_diegetic_music:\nN/A"
     )
     inputs = {
         "compiler_version": COMPILER_VERSION,

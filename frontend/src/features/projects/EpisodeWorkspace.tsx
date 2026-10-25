@@ -123,9 +123,9 @@ export function EpisodeWorkspace({
             <li>保留对白的原始语言。</li>
           </ol>
           <div className="stage-note">
-            当前可用：剧本保存、分镜编排、参考首帧
+            当前可用：分镜编排、参考首帧、原生音画
             <br />
-            在下方工作台逐镜编辑与生成首帧，视频和导出随后接入。
+            在下方逐镜生成并采用首帧和有声视频，成片导出随后接入。
           </div>
         </aside>
       </div>
