@@ -72,6 +72,11 @@ def endpoint(settings):
     return f"{parts.scheme}://{host}{port}"
 
 
+def tls_identity(settings):
+    # TCP直连回环仍保留配置中的TLS证书身份；不关闭证书验证。
+    return {"sni_hostname": urlsplit(settings.base_url).hostname}
+
+
 class MiniMaxH3Backend:
     def __init__(self, *, transport=None):
         self.transport = transport
@@ -89,7 +94,9 @@ class MiniMaxH3Backend:
             raise BackendError(
                 "H3_MODEL_UNSUPPORTED", "当前仅支持已验证的MiniMax-H3音画模型", False
             )
-        async with client.stream("GET", endpoint(settings) + "/v1/models") as response:
+        async with client.stream(
+            "GET", endpoint(settings) + "/v1/models", extensions=tls_identity(settings)
+        ) as response:
             if response.status_code != 200:
                 raise BackendError("H3_UNAVAILABLE", "无法读取本机H3模型列表", False)
             raw = bytearray()
@@ -222,6 +229,7 @@ class MiniMaxH3Backend:
                         "POST",
                         endpoint(request.settings) + "/v1/video/generations",
                         json=payload,
+                        extensions=tls_identity(request.settings),
                         headers={
                             "Accept": "text/event-stream",
                             "Accept-Encoding": "identity",

@@ -201,7 +201,7 @@
 - [x] 审查SDK兼容修正与引用顺序，提交 `feat: generate reference driven first frames`，等待 M5 确认。
 
 
-实施证据：[M5首帧生成验收](../../M5首帧生成验收.md)。已完成开发、独立审查修正、回归与真实模型演示，待用户验收；未启动任务10。
+实施证据：[M5首帧生成验收](../../M5首帧生成验收.md)。已完成开发、独立审查修正、回归与真实模型演示并获用户验收；任务10已由用户确认开工。
 
 ## M6：MiniMax-H3 原生视频和声音
 
@@ -211,11 +211,14 @@
 
 **接口：** 异步 `MiniMaxH3Backend.generate(request: VideoRequest, on_progress) -> RawAVResult`；`FFmpegService.encode_av(result: RawAVResult, target: Path, deadline) -> MediaInfo`；`video_profile(width, height, duration, preset) -> VideoProfile`。客户端内部从冻结首帧生成first_frame_image，不让浏览器提交Base64。
 
-- [ ] 先写协议测试：首帧字段解码后与选中资产SHA一致；首帧无效/过期拒绝；540秒总截止不被进度重置；HTTP/SSE中断、非法Base64、RGB字节数/格式不符均明确失败。
-- [ ] 写音频测试：PCM s16le、1/2声道和8000～96000 Hz边界；音频缺失失败；差异>0.5秒失败；合法短音频补齐、长音频裁切后封装AAC。自制画面配正弦波，ffprobe确认H.264/AAC、帧率、时长和双流存在。
-- [ ] 跑失败测试；抽取旧H3音画协议并改为异步HTTP和子进程。不得复制 `_prepare` 的内存估算、指标门禁、模型卸载/恢复；不新增任何可用内存检查。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_minimax_protocol.py tests/test_av_encoding.py tests/test_video_jobs.py -q`；前端测试和typecheck。真实验收为一镜短视频，核对声音要求、实际首帧和音轨，≤540秒；声音自然度及台词准确度由人工播放确认。
-- [ ] 审查旧协议兼容和原生音频完整性，提交 `feat: generate H3 video clips with native audio`，等待 M6 确认。
+- [x] 先写协议测试：首帧字段解码后与选中资产SHA一致；首帧无效/过期拒绝；540秒总截止不被进度重置；HTTP/SSE中断、非法Base64、RGB字节数/格式不符均明确失败。
+- [x] 写音频测试：PCM s16le、1/2声道和8000～96000 Hz边界；音频缺失失败；差异>0.5秒失败；合法短音频补齐、长音频裁切后封装AAC。自制画面配正弦波，ffprobe确认H.264/AAC、帧率、时长和双流存在。
+- [x] 跑失败测试；抽取旧H3音画协议并改为异步HTTP和子进程。不得复制 `_prepare` 的内存估算、指标门禁、模型卸载/恢复；不新增任何可用内存检查。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_minimax_protocol.py tests/test_av_encoding.py tests/test_video_jobs.py -q`；前端测试和typecheck。真实验收为一镜短视频，核对声音要求、实际首帧和音轨，≤540秒；声音自然度及台词准确度由人工播放确认。
+- [x] 审查旧协议兼容和原生音频完整性，提交 `feat: generate H3 video clips with native audio`，等待 M6 确认。
+
+
+实施证据：[M6音画生成验收](../../M6音画生成验收.md)。开发、独立审查修正、回归与真实模型/浏览器演示完成，待用户验收；未启动任务11。
 
 ## M7：成片导出
 

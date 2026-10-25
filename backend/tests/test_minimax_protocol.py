@@ -319,3 +319,78 @@ def test_inference_silence_before_task_deadline_is_not_cut_by_short_read_timeout
         MiniMaxH3Backend(transport=httpx.MockTransport(route)).generate(value)
     )
     assert result.pcm_path.stat().st_size > 0
+
+
+def test_https_localhost_keeps_trusted_dns_identity_on_loopback(tmp_path, monkeypatch):
+    import ssl
+    import subprocess
+    import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+    from app.clients import minimax_h3
+
+    cert, key = tmp_path / "cert.pem", tmp_path / "key.pem"
+    config = tmp_path / "cert.cnf"
+    config.write_text(
+        "[req]\ndistinguished_name=dn\nx509_extensions=ext\nprompt=no\n[dn]\nCN=localhost\n[ext]\nsubjectAltName=DNS:localhost\n"
+    )
+    subprocess.run(
+        [
+            "openssl",
+            "req",
+            "-x509",
+            "-newkey",
+            "rsa:2048",
+            "-nodes",
+            "-days",
+            "1",
+            "-config",
+            str(config),
+            "-keyout",
+            str(key),
+            "-out",
+            str(cert),
+        ],
+        check=True,
+        capture_output=True,
+        timeout=10,
+    )
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            payload = json.dumps(
+                {"data": [{"id": MODEL, "state": "ready", "capabilities": ["video"]}]}
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def log_message(self, *args):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain(cert, key)
+    server.socket = context.wrap_socket(server.socket, server_side=True)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    trusted = ssl.create_default_context(cafile=str(cert))
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        minimax_h3.httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(verify=trusted, **kwargs),
+    )
+    try:
+        result = asyncio.run(
+            minimax_h3.MiniMaxH3Backend().test_connection(
+                VideoSettings(base_url=f"https://localhost:{server.server_port}")
+            )
+        )
+        assert result.model == MODEL and result.state == "ready"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(2)
