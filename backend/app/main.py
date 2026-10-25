@@ -9,7 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
 
-from .api import assets, bootstrap, episodes, projects, settings, shots
+from .api import assets, bootstrap, episodes, jobs, projects, settings, shots
 from .config import AppSettings
 from .db import Database
 from .errors import AppError
@@ -17,18 +17,22 @@ from .local_http import is_local_host
 from .models import Asset
 from .schemas.common import ErrorRead
 from .services.storage import StorageService
+from .services.tasks import TaskService
 from .upload_limit import UploadBodyLimit, is_upload_request
 
 logger = logging.getLogger(__name__)
 
 
-def error_response(status: int, code: str, message: str) -> JSONResponse:
+def error_response(status: int, code: str, message: str, details=None) -> JSONResponse:
     return JSONResponse(
-        {"error": {"code": code, "message": message}}, status_code=status
+        {"error": {"code": code, "message": message, **(details or {})}},
+        status_code=status,
     )
 
 
-def create_app(config: AppSettings | None = None) -> FastAPI:
+def create_app(
+    config: AppSettings | None = None, *, task_handlers=None, task_policy=None
+) -> FastAPI:
     config = config or AppSettings()
 
     @asynccontextmanager
@@ -45,6 +49,12 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
                     if asset.thumbnail_path:
                         registered.add(asset.thumbnail_path)
             app.state.storage.quarantine_orphans(registered)
+            app.state.task_service = TaskService(
+                database,
+                app.state.storage,
+                task_handlers,
+                task_policy,
+            )
             yield
         finally:
             database.close()
@@ -57,7 +67,7 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
         redoc_url=None,
         responses={
             status: {"model": ErrorRead}
-            for status in (403, 404, 409, 413, 415, 422, 500, 503)
+            for status in (403, 404, 409, 413, 415, 422, 429, 500, 503)
         },
     )
     app.state.token = secrets.token_urlsafe(32)
@@ -96,7 +106,7 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
 
     @app.exception_handler(AppError)
     async def app_error(request: Request, error: AppError):
-        return error_response(error.status, error.code, error.message)
+        return error_response(error.status, error.code, error.message, error.details)
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, error: RequestValidationError):
@@ -116,6 +126,7 @@ def create_app(config: AppSettings | None = None) -> FastAPI:
         settings.router,
         assets.router,
         shots.router,
+        jobs.router,
     ):
         app.include_router(router, prefix="/api/v1")
     return app
