@@ -1,6 +1,6 @@
 # 本地 AI 短视频制作平台：产品与架构设计
 
-日期：2026-10-25。状态：待用户审阅；本轮只编写设计和计划，不创建业务代码、不安装依赖、不调用真实模型。
+日期：2026-10-25。状态：用户已确认开始M1；任务1、2进入实施，其余模块仍按用户指令分步推进。实现证据见[M1验收记录](../../M1项目剧集验收.md)。
 
 ## 1. 已确认的目标与边界
 
@@ -30,7 +30,7 @@
 | 原工作台整体搬迁后替换技术栈 | 短期看似保留更多功能 | 引入旧 API、JSON 正式数据和审核状态等包袱，与空数据、新产品范围不符；不采用 |
 | 独立常驻任务进程与持久化队列 | 适合多任务和跨进程恢复 | 超出单任务及 BackgroundTasks 约束；不采用 |
 
-所选路线是用户确认的新平台建设方式。以下实现细节为本方案的设计决定，尚未视为已获实施批准。
+所选路线是用户确认的新平台建设方式。用户已确认开始M1，后续模块须按敏捷编排分别授权和验收。
 
 `BackgroundTasks` 在 HTTP 响应之后执行，适合本平台把外部模型 I/O 放到后台，但它不是持久化队列。进程中止时不承诺任务继续或自动重放。数据库约束、单实例锁、启动恢复和输入快照共同补齐可靠性；不能只靠内存布尔锁。
 
@@ -248,7 +248,7 @@ READY 条件：描述、image_prompt 非空，角色及参考关联有效，生�
 
 `output_asset_id` 只由任务发布事务维护，须反查 Asset.source_task_id 和归属；媒体接口不信任该索引单独授权。Asset.source_task_id 对非空值设唯一约束：每个成功媒体任务只发布一个主资产。
 
-任务范围：PARSE_SCRIPT 要求 episode_id；OPTIMIZE_PROMPTS、IMAGE、VIDEO 要求 episode_id 和 shot_id；EXPORT 要求 episode_id、shot_id 为空。所有目标必须属于 project_id。
+任务范围：PARSE_SCRIPT 要求 episode_id 且 shot_id 为空；OPTIMIZE_PROMPTS、IMAGE、VIDEO 要求 episode_id 和 shot_id；EXPORT 要求 episode_id 且 shot_id 为空。所有目标必须属于 project_id。
 
 全局活跃唯一约束：对 `active_slot` 建条件唯一索引，条件为 status 属于 PENDING、RUNNING；另设 CHECK(active_slot=1)。idempotency_key 相同且 request_hash 相同返回原任务，不重复调度；同键不同输入返回 409。
 
@@ -356,6 +356,8 @@ RawAVResult 以任务临时目录中的 RGB/PCM 文件路径和格式元数据�
 ## 8. API 与前端契约
 
 全部业务接口位于 `/api/v1`，下表省略前缀。写接口检查本机 Host、允许的同源 Origin、启动时会话令牌；上传为 multipart，其余写入为 JSON。不提供账号登录和跨站 CORS 通配。
+
+M1审查明确代理信任边界：Next.js在rewrites之前校验原始Host；FastAPI同时验证Host和X-Forwarded-Host，只接受规范回环地址及合法端口，拒绝多值转发链。不能仅依赖代理改写后的后端Host。
 
 | 接口 | 用途 |
 |---|---|

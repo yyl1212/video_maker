@@ -1,0 +1,29 @@
+[project]
+name = "video-maker-backend"
+version = "0.1.0"
+description = "Apple Silicon 本地视频制作平台后端"
+requires-python = ">=3.13"
+dependencies = [
+  "alembic>=1.14,<2",
+  "fastapi>=0.115,<1",
+  "pydantic-settings>=2.7,<3",
+  "sqlalchemy>=2.0.36,<2.1",
+  "uvicorn>=0.34,<1",
+]
+
+[dependency-groups]
+dev = ["httpx2>=2,<3", "pytest>=8.3,<10", "ruff>=0.11,<1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
