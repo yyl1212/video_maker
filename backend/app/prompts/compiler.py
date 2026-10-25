@@ -4,6 +4,8 @@ import hashlib
 import json
 from dataclasses import dataclass
 
+from app.image_profile import IMAGE_PROFILE
+
 COMPILER_VERSION = "1"
 
 
@@ -56,7 +58,10 @@ def compile_image(snapshot: dict) -> CompiledPrompt:
             )
         )
     prompt = "\n".join(sections)
-    parameters = dict(snapshot.get("image_settings", {}))
+    parameters = {
+        "generation_profile": IMAGE_PROFILE,
+        **snapshot.get("image_settings", {}),
+    }
     inputs = {
         "compiler_version": COMPILER_VERSION,
         "kind": "IMAGE",

@@ -1,4 +1,4 @@
-"""仅配置连接与白名单参数，M1不执行模型请求。"""
+"""本机模型连接与白名单参数；各生成处理器读取提交快照。"""
 
 from typing import Literal
 from urllib.parse import urlsplit

@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Request
 
+from app.clients.drawthings import DrawThingsBackend, ImageConnectionRead
+from app.errors import AppError, BackendError
 from app.models import ModelSettings
 from app.schemas.clients import SettingsRead, SettingsUpdate
+from app.schemas.generation import ConnectionTest
 from app.services.projects import check_version
 
 router = APIRouter(tags=["settings"])
@@ -33,3 +36,11 @@ def update_settings(data: SettingsUpdate, request: Request):
         record.version += 1
         session.flush()
         return read_settings(record)
+
+
+@router.post("/settings/test-connection", response_model=ImageConnectionRead)
+async def test_connection(data: ConnectionTest):
+    try:
+        return await DrawThingsBackend().test_connection(data.image)
+    except BackendError as exc:
+        raise AppError(503, exc.code, exc.message) from exc

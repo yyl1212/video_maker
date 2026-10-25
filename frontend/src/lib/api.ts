@@ -28,6 +28,16 @@ export type ShotEditable = Required<
 >;
 export type ReferenceInput = components["schemas"]["ReferenceInput"];
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code: string | null = null,
+  ) {
+    super(message);
+  }
+}
+
 let sessionPromise: Promise<string> | null = null;
 
 async function sessionToken(): Promise<string> {
@@ -76,8 +86,16 @@ export async function apiRequest<T>(
   if (!response.ok) {
     if (response.status === 403) sessionPromise = null;
     let message = "请求未完成，请检查本机服务后重试";
+    let code: string | null = null;
     if (payload && typeof payload === "object" && "error" in payload) {
       const detail = payload.error;
+      if (
+        detail &&
+        typeof detail === "object" &&
+        "code" in detail &&
+        typeof detail.code === "string"
+      )
+        code = detail.code;
       if (
         detail &&
         typeof detail === "object" &&
@@ -87,7 +105,7 @@ export async function apiRequest<T>(
         message = detail.message;
       }
     }
-    throw new Error(message);
+    throw new ApiError(message, response.status, code);
   }
   return payload as T;
 }

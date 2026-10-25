@@ -194,11 +194,14 @@
 
 **接口：** 异步 `DrawThingsBackend.generate(request: ImageRequest, on_progress) -> ImageResult`；ImageRequest含最终Prompt、负面要求、冻结参考路径、实际配置和截止；ImageResult为待发布PNG及元数据。
 
-- [ ] 先写SDK调用测试：多个参考按position进入moodboard；显式false/0保留；无结果/gRPC超时/文件写入失败生成FAILED；上游是否停止未知时NEEDS_RESET。
-- [ ] 写发布故障测试：原图不覆写，生成后修改当前分镜仅产生过期历史；文件已rename但DB提交失败，重启隔离孤立结果；当前首帧选择不被自动更改。
-- [ ] 跑失败测试后抽取旧SDK协议，适配独立BackendError和异步截止；禁止导入旧drama全局目录或WorkflowManager。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_drawthings_backend.py tests/test_image_jobs.py -q`；前端执行image-generation测试与typecheck。真实验收用自制参考完成一张小尺寸图并检查已记录的实际参考列表，整次≤540秒。
-- [ ] 审查SDK兼容修正与引用顺序，提交 `feat: generate reference driven first frames`，等待 M5 确认。
+- [x] 先写SDK调用测试：多个参考按position进入moodboard；显式false/0保留；无结果/gRPC超时/文件写入失败生成FAILED；上游是否停止未知时NEEDS_RESET。
+- [x] 写发布故障测试：原图不覆写，生成后修改当前分镜仅产生过期历史；文件已rename但DB提交失败，重启隔离孤立结果；当前首帧选择不被自动更改。
+- [x] 跑失败测试后抽取旧SDK协议，适配独立BackendError和异步截止；禁止导入旧drama全局目录或WorkflowManager。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_drawthings_backend.py tests/test_image_jobs.py -q`；前端执行image-generation测试与typecheck。真实验收用自制参考完成一张小尺寸图并检查已记录的实际参考列表，整次≤540秒。
+- [x] 审查SDK兼容修正与引用顺序，提交 `feat: generate reference driven first frames`，等待 M5 确认。
+
+
+实施证据：[M5首帧生成验收](../../M5首帧生成验收.md)。已完成开发、独立审查修正、回归与真实模型演示，待用户验收；未启动任务10。
 
 ## M6：MiniMax-H3 原生视频和声音
 
