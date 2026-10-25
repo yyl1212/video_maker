@@ -8,7 +8,7 @@
 
 **技术栈：** Next.js App Router、TypeScript strict、Tailwind CSS、Zustand；FastAPI、SQLAlchemy 2.x、SQLite、Alembic；独立 LLM/Draw Things/MiniMax-H3 客户端及 FFmpeg。
 
-**设计依据：** [完整设计](../specs/2026-10-25-local-video-platform-design.md)。M1（任务1、2）与M3（任务6、7）已验收，用户现已确认M2（任务3、4、5）。当前证据见[M2验收记录](../../M2任务引擎验收.md)，其余任务仍按模块单独授权推进。
+**设计依据：** [完整设计](../specs/2026-10-25-local-video-platform-design.md)。M1、M3、M2、M5、M6已验收，M7（任务11）已按用户指令完成开发并等待验收。当前证据见[M7验收记录](../../M7成片导出验收.md)，其余任务仍按模块单独授权推进。
 
 **交付编排：** [敏捷进度与看板](2026-10-25-agile-delivery.md)。M1～M8作为模块标识保留，实际按 M1→M3→M2→M5→M6→M7→M4→M8 交付；优先用手工分镜贯通音画制作，再交付AI辅助。模块及任务内的验收条件保持不变。
 
@@ -218,7 +218,7 @@
 - [x] 审查旧协议兼容和原生音频完整性，提交 `feat: generate H3 video clips with native audio`，等待 M6 确认。
 
 
-实施证据：[M6音画生成验收](../../M6音画生成验收.md)。开发、独立审查修正、回归与真实模型/浏览器演示完成，待用户验收；未启动任务11。
+实施证据：[M6音画生成验收](../../M6音画生成验收.md)。开发、独立审查修正、回归与真实模型/浏览器演示已完成并获用户验收，现按用户指令完成M7任务11。
 
 ## M7：成片导出
 
@@ -228,11 +228,13 @@
 
 **接口：** `ExportHandler.prepare_snapshot(session, command) -> TaskSnapshot`；异步 `FFmpegService.normalize_clip(input, output, profile, deadline) -> MediaInfo`、`concat(clips, target, profile, deadline) -> MediaInfo`；EXPORT输出final_video Asset及manifest.json。
 
-- [ ] 先写快照测试：提交后改镜头顺序或选择不改变清单；缺片段拒绝；使用过期片段需逐项绑定确认；跨项目和哈希变动拒绝；多次导出路径独立。
-- [ ] 写音画回归：混合竖/横、有声/无声、不同帧率和采样率三段自制片段；统一尺寸补边、不拉伸；24fps、AAC48k双声道；上传片段量化到最近24fps整帧并记录原时长，单段变化≤一帧；时间戳从0开始，音轨按段对齐，输出时长与规范化片段之和误差≤0.15秒；解码检查有声段非静音、无声段静音。
-- [ ] 跑失败测试后实现；采用逐段规范化后拼接，不假设可以concat copy；FFmpeg参数以数组传递，禁止shell拼接用户文本。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_export_snapshot.py tests/test_export_av.py -q`；前端exports测试、typecheck和build。小样本用真实ffmpeg，整体≤540秒。
-- [ ] 审查音画连续性，提交 `feat: export ordered clips with audio`，演示下载独立成片和来源清单，等待 M7 确认。
+- [x] 先写快照测试：提交后改镜头顺序或选择不改变清单；缺片段拒绝；使用过期片段需逐项绑定确认；跨项目和哈希变动拒绝；多次导出路径独立。
+- [x] 写音画回归：混合竖/横、有声/无声、不同帧率和采样率三段自制片段；统一尺寸补边、不拉伸；24fps、AAC48k双声道；上传片段量化到最近24fps整帧并记录原时长，单段变化≤一帧；时间戳从0开始，音轨按段对齐，输出时长与规范化片段之和误差≤0.15秒；解码检查有声段非静音、无声段静音。
+- [x] 跑失败测试后实现；采用逐段规范化后拼接，不假设可以concat copy；FFmpeg参数以数组传递，禁止shell拼接用户文本。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_export_snapshot.py tests/test_export_av.py -q`；前端exports测试、typecheck和build。小样本用真实ffmpeg，整体≤540秒。
+- [x] 审查音画连续性，提交 `feat: export ordered clips with audio`，演示下载独立成片和来源清单，等待 M7 确认。
+
+实施证据：[M7成片导出验收](../../M7成片导出验收.md)。已完成开发、独立审查修正、回归及三段原创音画导出与下载，待用户验收。下一项按敏捷顺序为任务8（M4），尚未开工。
 
 ## M8：整体验收与交付
 
