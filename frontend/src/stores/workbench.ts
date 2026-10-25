@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Character, ShotEditable, ReferenceInput } from "@/lib/api";
+import type { components } from "@/lib/api-types";
 
 export type ProjectDraft = {
   kind: "project";
@@ -25,7 +26,21 @@ export type ReferenceDraft = {
   baseVersion: number;
   dirty: boolean;
 };
-type EditorDraft = ProjectDraft | EpisodeDraft | ShotDraft | ReferenceDraft;
+export type ExportDraft = {
+  kind: "export";
+  value: {
+    source: components["schemas"]["ExportPreviewRead"];
+    selected: number[];
+    acknowledgements: Record<number, string>;
+    profile: NonNullable<
+      components["schemas"]["ExportSubmit"]["output_profile"]
+    >;
+  };
+  baseVersion: number;
+  dirty: boolean;
+};
+type EditorDraft =
+  ProjectDraft | EpisodeDraft | ShotDraft | ReferenceDraft | ExportDraft;
 type WorkbenchState = {
   drafts: Record<string, EditorDraft>;
   setDraft: (key: string, draft: EditorDraft) => void;

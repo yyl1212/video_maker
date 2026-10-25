@@ -67,12 +67,20 @@ class ShotService:
         if any(identifier not in known for identifier in character_ids):
             raise AppError(422, "UNKNOWN_CHARACTER", "所选角色不在当前项目，请重新选择")
 
-    def asset_file(self, asset):
+    def asset_file(self, asset, *, verify_hash: bool = True):
         path = Path(asset.file_path)
         self.storage.checked_path(path, self.storage.media)
-        return self.storage.checked_file(path, asset.sha256)
+        return self.storage.checked_file(path, asset.sha256 if verify_hash else None)
 
-    def read(self, session, shot: Shot, episode: Episode, project: Project) -> ShotRead:
+    def read(
+        self,
+        session,
+        shot: Shot,
+        episode: Episode,
+        project: Project,
+        *,
+        verify_files: bool = True,
+    ) -> ShotRead:
         references = list(
             session.scalars(
                 select(ShotReferenceAsset)
@@ -90,7 +98,7 @@ class ShotService:
                 asset = get_asset(session, ref.asset_id, project.id)
                 if asset.type != "image":
                     raise AppError(422, "REFERENCE_TYPE", "参考素材必须为图片")
-                self.asset_file(asset)
+                self.asset_file(asset, verify_hash=verify_files)
                 refs.append({"sha256": asset.sha256, "role": ref.role})
             except AppError:
                 input_errors.append(f"参考图片 #{ref.asset_id} 不可用，请重新绑定")
@@ -137,7 +145,7 @@ class ShotService:
         if selection.first_frame_asset_id is not None:
             try:
                 frame = get_asset(session, selection.first_frame_asset_id, project.id)
-                self.asset_file(frame)
+                self.asset_file(frame, verify_hash=verify_files)
                 if frame.type != "image":
                     raise AppError(422, "ASSET_TYPE", "首帧须为图片")
                 if input_errors or selection.first_frame_input_hash != image.input_hash:
@@ -151,7 +159,7 @@ class ShotService:
         if selection.selected_video_asset_id is not None:
             try:
                 clip = get_asset(session, selection.selected_video_asset_id, project.id)
-                self.asset_file(clip)
+                self.asset_file(clip, verify_hash=verify_files)
                 if clip.type != "video":
                     raise AppError(422, "ASSET_TYPE", "片段须为视频")
                 if (

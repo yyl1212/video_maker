@@ -1108,6 +1108,58 @@ summary {
     display: none;
   }
 }
+.export-timeline {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.timeline-row {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.timeline-row-heading,
+.button-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.checkbox-label input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--green);
+}
+.export-actions {
+  margin-top: 24px;
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+}
+.export-actions select {
+  margin-top: 8px;
+}
+.export-history {
+  margin-top: 24px;
+}
+.export-results {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+}
+.export-result {
+  max-width: 600px;
+}
+.timeline-row .media-preview {
+  max-width: 360px;
+}
 @media (max-width: 760px) {
   .shot-layout {
     grid-template-columns: 1fr;
