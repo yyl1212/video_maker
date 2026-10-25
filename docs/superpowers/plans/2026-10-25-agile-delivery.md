@@ -92,7 +92,7 @@ US08跨迭代仅表示验收分层，不重复计算任务完成数；故事在S
 | 用户故事 | 已验收3 / 14；US01、US02、US03 | US04、US05基础能力随M2交付，真实生图随M5验收 |
 | 当前开发中 | 无；M2待用户验收 | 确认后进入M5 |
 
-本轮证据：[M3验收记录](../../M3资产分镜验收.md)、[草稿PR #3](https://github.com/yyl1212/video_maker/pull/3)。任务6、7于2026-10-25开工并完成开发/审查回归；无阻塞项。M1见[PR #2](https://github.com/yyl1212/video_maker/pull/2)，已获用户验收。
+本轮证据：[M2验收记录](../../M2任务引擎验收.md)、[草稿PR #4](https://github.com/yyl1212/video_maker/pull/4)。任务3、4、5于2026-10-25开工并完成开发、独立审查修正、回归与演示，无阻塞项，等待用户验收。此前M3见[PR #3](https://github.com/yyl1212/video_maker/pull/3)，M1见[PR #2](https://github.com/yyl1212/video_maker/pull/2)，均已获用户验收。
 
 实际工作开始后，每个任务维护：任务ID、状态、开始/完成时间、验收证据、MR/PR、阻塞原因和下一动作。若需要多人协作，再由用户指定负责人；目前不虚构团队分工。
 
