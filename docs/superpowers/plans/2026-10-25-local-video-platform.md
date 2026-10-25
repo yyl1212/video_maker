@@ -144,7 +144,7 @@
 - [x] 跑失败测试后实现；计时器、AbortController和作用域标识均在卸载时清理，轮询不覆盖本地表单。
 - [x] 执行 `python scripts/run-check.py --cwd frontend -- npm run test -- jobs` 和 typecheck。
 - [x] 以模拟API和独立后端测试展示全局任务行为，不为演示加入生产环境假任务接口。
-- [ ] 审查并提交 `feat: show persistent local task progress`，等待 M2 确认。
+- [x] 审查并提交 `feat: show persistent local task progress`，等待 M2 确认。
 
 ## M3：资产和分镜工作台
 

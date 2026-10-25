@@ -1,5 +1,6 @@
 import asyncio
 import threading
+from pathlib import Path
 
 import pytest
 from fastapi import BackgroundTasks
@@ -101,6 +102,67 @@ def test_heartbeat_updates_without_inventing_progress(engine):
         await running
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize("reuse_main", [True, False])
+def test_failed_outcome_never_quarantines_existing_assets(engine, reuse_main):
+    from io import BytesIO
+
+    from fastapi import UploadFile
+    from PIL import Image
+    from sqlalchemy import select
+
+    from app.models import Asset
+    from app.services.assets import AssetService
+    from app.services.tasks import PreparedAsset, TaskOutcome
+
+    service, ids, _ = engine
+    stream = BytesIO()
+    Image.new("RGB", (32, 32), "#884477").save(stream, "PNG")
+    stream.seek(0)
+    old = AssetService(service.database, service.storage).upload(
+        ids[0], UploadFile(file=stream, filename="原有原创图片.png")
+    )
+    old_main, old_thumb = Path(old.file_path), Path(old.thumbnail_path)
+    produced = []
+
+    class IncorrectHandler(SampleHandler):
+        async def execute(self, context):
+            path, sha, size = old_main, old.sha256, old.size_bytes
+            if not reuse_main:
+                temporary = service.storage.new_temp(".png")
+                Image.new("RGB", (32, 32), "#112233").save(temporary, "PNG")
+                published = service.storage.publish_file(temporary, ids[0])
+                path, sha, size = published.path, published.sha256, published.size_bytes
+                produced.append(path)
+            prepared = PreparedAsset(
+                type="image",
+                name="错误结果",
+                file_path=path,
+                thumbnail_path=old_thumb,
+                sha256=sha,
+                size_bytes=size,
+                mime_type="image/png",
+                width=32,
+                height=32,
+            )
+            return TaskOutcome(
+                prepared_asset=prepared,
+                result_json=None if reuse_main else {"bad": object()},
+            )
+
+    service.handlers["IMAGE"] = IncorrectHandler()
+    job = service.submit(command(*ids, kind="IMAGE")).task
+    asyncio.run(service.runner.run(job.id))
+    assert service.get(job.id).status == "FAILED"
+    assert old_main.exists(), "不能隔离已登记的旧主文件"
+    assert old_thumb.exists(), "不能隔离共享或已登记的旧缩略图"
+    with service.database.session_scope() as session:
+        records = list(session.scalars(select(Asset)))
+        registered = {p for a in records for p in (a.file_path, a.thumbnail_path) if p}
+    service.storage.quarantine_orphans(registered)
+    assert old_main.exists() and old_thumb.exists()
+    assert all(not path.exists() for path in produced)
 
 
 def test_jobs_routes_have_no_production_fake_submit(client):

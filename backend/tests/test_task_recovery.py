@@ -10,7 +10,7 @@ from app.errors import AppError
 from app.main import create_app
 from app.models import RuntimeState, Task
 from app.models.base import utc_now
-from app.services.recovery import RecoveryService
+from app.services.recovery import RecoveryService, WorkspaceLock
 
 
 def test_second_backend_instance_cannot_open_workspace(tmp_path):
@@ -24,6 +24,99 @@ def test_second_backend_instance_cannot_open_workspace(tmp_path):
     # 锁释放后可以正常启动，不删除锁文件造成inode竞争。
     with TestClient(create_app(config), base_url="http://127.0.0.1:8000") as restarted:
         assert restarted.get("/api/v1/health").status_code == 200
+
+
+def test_shutdown_keeps_workspace_lock_until_old_worker_exits(tmp_path):
+    from task_helpers import SampleHandler, records
+
+    from app.services.tasks import TaskOutcome, TaskPolicy
+
+    config = AppSettings(data_dir=tmp_path / "closing-worker")
+    release, started = asyncio.Event(), asyncio.Event()
+
+    class Resistant(SampleHandler):
+        async def execute(self, context):
+            started.set()
+            try:
+                await asyncio.sleep(30)
+            except asyncio.CancelledError:
+                await release.wait()
+                return TaskOutcome(result_json={"summary": "晚结束"})
+
+    app = create_app(
+        config,
+        task_handlers={"OPTIMIZE_PROMPTS": Resistant()},
+        task_policy=TaskPolicy(cancel_grace_seconds=0.01),
+    )
+
+    async def run():
+        lifespan = app.router.lifespan_context(app)
+        await lifespan.__aenter__()
+        service = app.state.task_service
+        ids = records(service.database)
+        job = service.submit(command(*ids)).task
+        execution = asyncio.create_task(service.runner.run(job.id))
+        await started.wait()
+        closing = asyncio.create_task(lifespan.__aexit__(None, None, None))
+        try:
+            await asyncio.sleep(0.08)
+            assert not closing.done(), "旧执行仍在运行时生命周期不能交出锁"
+            with pytest.raises(AppError) as error:
+                WorkspaceLock(config.data_dir).acquire()
+            assert error.value.code == "WORKSPACE_IN_USE"
+        finally:
+            release.set()
+            await asyncio.gather(execution, closing, return_exceptions=True)
+            await asyncio.sleep(0.01)
+
+    asyncio.run(run())
+    lock = WorkspaceLock(config.data_dir).acquire()
+    lock.release()
+
+
+def test_shutdown_waits_for_inflight_claim_thread(tmp_path, monkeypatch):
+    import threading
+
+    from task_helpers import SampleHandler, records
+
+    from app.services.tasks import TaskPolicy
+
+    config = AppSettings(data_dir=tmp_path / "closing-thread")
+    app = create_app(
+        config,
+        task_handlers={"OPTIMIZE_PROMPTS": SampleHandler()},
+        task_policy=TaskPolicy(cancel_grace_seconds=0.01),
+    )
+    entered, release = threading.Event(), threading.Event()
+
+    async def run():
+        lifespan = app.router.lifespan_context(app)
+        await lifespan.__aenter__()
+        service = app.state.task_service
+        ids = records(service.database)
+        job = service.submit(command(*ids)).task
+        original = service.claim
+
+        def delayed(task_id):
+            entered.set()
+            assert release.wait(timeout=2)
+            return original(task_id)
+
+        monkeypatch.setattr(service, "claim", delayed)
+        execution = asyncio.create_task(service.runner.run(job.id))
+        while not entered.is_set():
+            await asyncio.sleep(0.002)
+        closing = asyncio.create_task(lifespan.__aexit__(None, None, None))
+        try:
+            await asyncio.sleep(0.08)
+            assert not closing.done(), "入库线程未完成时不能交出工作区"
+            with pytest.raises(AppError):
+                WorkspaceLock(config.data_dir).acquire()
+        finally:
+            release.set()
+            await asyncio.gather(execution, closing, return_exceptions=True)
+
+    asyncio.run(run())
 
 
 def test_restart_fails_pending_without_replay(engine):

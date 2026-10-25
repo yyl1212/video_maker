@@ -276,7 +276,7 @@ class RecoveryService:
         while True:
             await asyncio.sleep(self.service.policy.sweep_seconds)
             try:
-                await asyncio.to_thread(self.inspect_pending)
+                await self.service.runner.io(self.inspect_pending)
             except AppError:
                 # 数据库不可用时不释放任何槽位，下次只重试元数据巡检。
                 continue

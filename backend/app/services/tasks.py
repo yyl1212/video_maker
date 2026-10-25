@@ -185,6 +185,7 @@ class TaskService:
         self.policy = policy or TaskPolicy()
         self.owner = str(uuid4())
         self.gate = ExecutionGate()
+        self.closing = False
         self.runner = TaskRunner(self)
 
     def submit(self, command: TaskSubmitCommand) -> TaskSubmission:
@@ -203,6 +204,8 @@ class TaskService:
                     )
                 return TaskSubmission(task_read(existing), False, self)
             runtime = session.get(RuntimeState, 1)
+            if self.closing:
+                raise AppError(503, "APP_SHUTTING_DOWN", "应用正在停止，暂不接收新任务")
             if runtime.state == "NEEDS_RESET" or self.gate.poisoned:
                 raise AppError(
                     503, "EXECUTION_STATE_UNKNOWN", "执行状态尚未确认，请先恢复执行状态"
@@ -294,7 +297,7 @@ class TaskService:
 
     def claim(self, task_id: int):
         with self.gate.lock:
-            if self.gate.running or self.gate.poisoned:
+            if self.closing or self.gate.running or self.gate.poisoned:
                 return None
             with self.database.session_scope(write=True) as session:
                 task = session.get(Task, task_id)
@@ -342,6 +345,14 @@ class TaskService:
                     raise AppError(422, "INVALID_PROGRESS", "任务进度不合法")
                 task.stage, task.progress = stage, progress
             if execution is not None:
+                if (
+                    self.closing
+                    and execution.get("remote", {}).get("started")
+                    and not execution.get("remote", {}).get("finished")
+                ):
+                    raise AppError(
+                        503, "APP_SHUTTING_DOWN", "应用正在停止，不能发起模型请求"
+                    )
                 if (
                     execution.get("remote", {}).get("started")
                     and not execution.get("remote", {}).get("finished")
