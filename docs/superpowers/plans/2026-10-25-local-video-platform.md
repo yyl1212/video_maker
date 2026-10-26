@@ -8,7 +8,7 @@
 
 **技术栈：** Next.js App Router、TypeScript strict、Tailwind CSS、Zustand；FastAPI、SQLAlchemy 2.x、SQLite、Alembic；独立 LLM/Draw Things/MiniMax-H3 客户端及 FFmpeg。
 
-**设计依据：** [完整设计](../specs/2026-10-25-local-video-platform-design.md)。M1、M3、M2、M5、M6已验收，M7（任务11）已按用户指令完成开发并等待验收。当前证据见[M7验收记录](../../M7成片导出验收.md)，其余任务仍按模块单独授权推进。
+**设计依据：** [完整设计](../specs/2026-10-25-local-video-platform-design.md)。M1、M3、M2、M5、M6、M7已验收，M4（任务8）已按用户指令完成开发并等待本轮验收。当前证据见[M4验收记录](../../M4剧本与Prompt辅助验收.md)，其余任务仍按模块单独授权推进。
 
 **交付编排：** [敏捷进度与看板](2026-10-25-agile-delivery.md)。M1～M8作为模块标识保留，实际按 M1→M3→M2→M5→M6→M7→M4→M8 交付；优先用手工分镜贯通音画制作，再交付AI辅助。模块及任务内的验收条件保持不变。
 
@@ -180,11 +180,13 @@
 
 **接口：** 异步 `LLMClient.parse_script(request: ParseRequest) -> StoryboardDraft`、`optimize_prompts(request: PromptRequest) -> PromptDraft`；`StoryboardService.apply(task_id, edited_value, expected_version, replace_confirm) -> EpisodeRead | ShotRead`。
 
-- [ ] 先写协议测试：本机地址、超时/HTTP错误、重复JSON字段、截断、非法ID、1～24镜、12000字边界、已验证Qwen整体reasoning_content兼容，其他模型不沿用此兼容。所有HTTP用本地fixture。
-- [ ] 写业务测试：生成不直接写正式分镜；英文动作与中文台词原文分离；重复/过期采纳409；替换需要明确确认且保留旧镜头资产；轮询不覆盖人工改稿。
-- [ ] 跑失败测试；实现JSON Schema和业务校验、PARSE_SCRIPT/OPTIMIZE_PROMPTS handler、文本草稿编辑采纳UI。来源变化时保留结果并显示原因，不自动重发。
-- [ ] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_llm_client.py tests/test_storyboard_jobs.py tests/test_storyboard_apply.py -q`；前端执行 storyboards 测试与typecheck。另由用户运行本机模型完成1次小剧本解析验收，整次≤540秒。
-- [ ] 审查协议兼容点，提交 `feat: add local script and prompt assistance`，等待 M4 确认。
+- [x] 先写协议测试：本机地址、超时/HTTP错误、重复JSON字段、截断、非法ID、1～24镜、12000字边界、已验证Qwen整体reasoning_content兼容，其他模型不沿用此兼容。所有HTTP用本地fixture。
+- [x] 写业务测试：生成不直接写正式分镜；英文动作与中文台词原文分离；重复/过期采纳409；替换需要明确确认且保留旧镜头资产；轮询不覆盖人工改稿。
+- [x] 跑失败测试；实现JSON Schema和业务校验、PARSE_SCRIPT/OPTIMIZE_PROMPTS handler、文本草稿编辑采纳UI。来源变化时保留结果并显示原因，不自动重发。
+- [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_llm_client.py tests/test_storyboard_jobs.py tests/test_storyboard_apply.py -q`；前端执行 storyboards 测试与typecheck。另由用户运行本机模型完成1次小剧本解析验收，整次≤540秒。
+- [x] 审查协议兼容点，提交 `feat: add local script and prompt assistance`，等待 M4 确认。
+
+实施证据：[M4剧本与Prompt辅助验收](../../M4剧本与Prompt辅助验收.md)。协议、草稿采纳、真实Qwen解析和单镜扩写、浏览器人工修订已完成；独立审查修正和交付已完成，待用户验收。下一项为M8任务12，尚未开工。
 
 ## M5：Draw Things 首帧
 
@@ -234,7 +236,7 @@
 - [x] 执行 `python scripts/run-check.py --cwd backend -- uv run pytest tests/test_export_snapshot.py tests/test_export_av.py -q`；前端exports测试、typecheck和build。小样本用真实ffmpeg，整体≤540秒。
 - [x] 审查音画连续性，提交 `feat: export ordered clips with audio`，演示下载独立成片和来源清单，等待 M7 确认。
 
-实施证据：[M7成片导出验收](../../M7成片导出验收.md)。已完成开发、独立审查修正、回归及三段原创音画导出与下载，待用户验收。下一项按敏捷顺序为任务8（M4），尚未开工。
+实施证据：[M7成片导出验收](../../M7成片导出验收.md)。已完成开发、独立审查修正、回归及三段原创音画导出与下载并获用户验收，用户已授权进入任务8（M4）。
 
 ## M8：整体验收与交付
 
