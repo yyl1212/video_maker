@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { apiRequest, type EpisodeRead, type ProjectRead } from "@/lib/api";
 import { useFormAction } from "@/components/useFormAction";
 import { EpisodeForm } from "./EpisodeForm";
+import { ScriptParser } from "@/features/storyboards/ScriptParser";
 import { ShotList } from "@/features/shots/ShotList";
 
 export function EpisodeWorkspace({
@@ -17,6 +18,7 @@ export function EpisodeWorkspace({
   const [episode, setEpisode] = useState<EpisodeRead | null>(null);
   const [project, setProject] = useState<ProjectRead | null>(null);
   const [error, setError] = useState("");
+  const [parseRevision, setParseRevision] = useState(0);
   const refresh = useFormAction<{ episode: EpisodeRead; project: ProjectRead }>(
     `episode-refresh:${episodeId}`,
     (result) => {
@@ -142,7 +144,16 @@ export function EpisodeWorkspace({
           {refresh.error}
         </p>
       )}
+      <ScriptParser
+        project={project}
+        episode={episode}
+        onApplied={(result) => {
+          setEpisode(result);
+          setParseRevision((n) => n + 1);
+        }}
+      />
       <ShotList
+        refreshRevision={parseRevision}
         project={project}
         episodeId={episodeId}
         readonly={Boolean(project.archived_at || episode.archived_at)}

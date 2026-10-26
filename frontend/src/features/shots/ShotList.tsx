@@ -15,6 +15,7 @@ import { VideoGenerationPanel } from "./VideoGenerationPanel";
 import { ImageGenerationPanel } from "./ImageGenerationPanel";
 import { ShotEditor } from "./ShotEditor";
 import { ReferencePicker } from "./ReferencePicker";
+import { PromptAssistant } from "@/features/storyboards/PromptAssistant";
 import { SelectionPanel } from "./SelectionPanel";
 
 function mergeSnapshot(
@@ -43,11 +44,13 @@ export function ShotList({
   episodeId,
   readonly,
   onEpisodeChanged,
+  refreshRevision = 0,
 }: {
   project: ProjectRead;
   episodeId: number;
   readonly: boolean;
   onEpisodeChanged?: () => void;
+  refreshRevision?: number;
 }) {
   const [listing, setListing] = useState<ShotListRead | null>(null);
   const [assets, setAssets] = useState<AssetRead[]>([]);
@@ -99,7 +102,7 @@ export function ShotList({
           );
       });
     return () => controller.abort();
-  }, [episodeId, project.id]);
+  }, [episodeId, project.id, refreshRevision]);
   const busy = action.pending || refresh.pending;
   const active =
     listing?.shots.find((s) => s.id === selected) ?? listing?.shots[0];
@@ -263,6 +266,12 @@ export function ShotList({
                 shot={{ ...active, read_only: readonly || active.read_only }}
                 project={project}
                 onSaved={saved}
+              />
+              <PromptAssistant
+                project={project}
+                episodeVersion={listing.episode_version}
+                shot={{ ...active, read_only: readonly || active.read_only }}
+                onApplied={saved}
               />
               <ReferencePicker
                 key={`refs:${active.id}`}

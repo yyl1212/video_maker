@@ -203,7 +203,11 @@ class TaskRunner:
             return await asyncio.shield(operation)
         except asyncio.CancelledError:
             # 保证一次正常取消不会留下仍在写数据库的后台线程。
-            await asyncio.shield(operation)
+            try:
+                await asyncio.shield(operation)
+            except Exception:
+                # 线程已经结束；它的失败不能替换原取消，否则心跳可能继续循环。
+                pass
             raise
 
     async def heartbeat(self, task_id):
