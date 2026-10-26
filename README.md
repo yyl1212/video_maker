@@ -2,7 +2,7 @@
 
 面向 Apple Silicon Mac 的单机、单用户制作工作台。使用本机 LLM 解析剧本、Draw Things 生成首帧、MiniMax-H3 同时生成视频和声音，最后用本地 FFmpeg 拼接 MP4。
 
-当前交付 **M8：整体验收与首版交付**。M1～M7均已获验收，完整创作链路已实现；M8回归、累计审查修正和真实模型分项演示已完成，待用户验收。进度与证据见[整体验收记录](docs/验收记录.md)、[草稿PR #9](https://github.com/yyl1212/video_maker/pull/9)。
+当前交付 **M8：整体验收与首版交付**。M1～M7均已获验收，完整创作链路已实现；M8回归、累计审查修正和真实模型分项演示已完成，并于2026-10-26获用户整体验收。进度与证据见[整体验收记录](docs/验收记录.md)、[交付PR #9](https://github.com/yyl1212/video_maker/pull/9)。
 
 ## 本机启动
 
@@ -94,4 +94,4 @@ backend/.venv/bin/python scripts/export-openapi.py --check
 
 已确认边界：从空数据开始、不迁移旧 DrawThings 数据；可复用已验证的模型接入协议；全局单任务、BackgroundTasks 后台执行、轮询进度；不依赖云服务，不做内存检测，不自动卸载或恢复其他模型。
 
-M8待用户整体验收；合并、发布及新增需求由用户另行决定。
+M8已获用户整体验收，用户已授权合并交付PR #9。发布及新增需求由用户另行决定。
