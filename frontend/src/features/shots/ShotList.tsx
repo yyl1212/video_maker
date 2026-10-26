@@ -111,10 +111,11 @@ export function ShotList({
   function saved(shot: ShotRead) {
     setListing((s) =>
       s
-        ? {
+        ? mergeSnapshot(s, {
             ...s,
+            // 文字、参考和采用面板可并发成功；晚到的写响应也不能回退版本。
             shots: s.shots.map((item) => (item.id === shot.id ? shot : item)),
-          }
+          })
         : s,
     );
   }

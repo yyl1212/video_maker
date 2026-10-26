@@ -353,3 +353,68 @@ test("解析采纳后的自动刷新晚到时不得回退新镜头已保存的�
   expect(useWorkbenchStore.getState().drafts["shot:5"]).toBeUndefined();
   expect(screen.getByRole("checkbox", { name: "参考 原创角色" })).toBeVisible();
 });
+
+test("旧采用成功响应晚到，不得回退已保存文字和已清除草稿", async () => {
+  let finishSelection: ((value: Response) => void) | undefined;
+  const adopted = {
+    ...shot,
+    selection: {
+      ...shot.selection,
+      version: 2,
+      first_frame_asset_id: image.id,
+    },
+  };
+  const edited = {
+    ...adopted,
+    version: 2,
+    raw_description: "已保存的新画面",
+  };
+  vi.mocked(fetch).mockImplementation(async (input, init) => {
+    const url = String(input);
+    if (url.endsWith("/bootstrap"))
+      return Response.json({ token: "local-token" });
+    if (url.endsWith("/selection") && init?.method === "PUT")
+      return new Promise<Response>((resolve) => {
+        finishSelection = resolve;
+      });
+    if (init?.method === "PATCH") return Response.json(edited);
+    if (url.endsWith("/assets")) return Response.json([image]);
+    if (url.endsWith("/shots"))
+      return Response.json({ episode_version: 1, shots: [shot] });
+    return Response.json(shot);
+  });
+  render(<ShotList project={project} episodeId={2} readonly={false} />);
+  await screen.findByLabelText("画面描述");
+  fireEvent.change(screen.getByLabelText("首帧版本"), {
+    target: { value: String(image.id) },
+  });
+  fireEvent.click(
+    screen.getByRole("checkbox", { name: "确认上传素材适用于当前镜头输入" }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "采用首帧" }));
+  await waitFor(() => expect(finishSelection).toBeDefined());
+  fireEvent.change(screen.getByLabelText("画面描述"), {
+    target: { value: edited.raw_description },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存分镜文字与参数" }));
+  await screen.findByText("分镜文字与参数已保存");
+  expect(useWorkbenchStore.getState().drafts["shot:3"]).toBeUndefined();
+  await act(async () => {
+    finishSelection!(Response.json(adopted));
+  });
+  expect(screen.getByLabelText("画面描述")).toHaveValue(edited.raw_description);
+  expect(screen.getByRole("button", { name: "取消首帧采用" })).toBeEnabled();
+  expect(screen.getByText("选择版本 2")).toBeVisible();
+  // 下一次写入继续使用较新版本，不能被旧采用响应退回version=1。
+  fireEvent.change(screen.getByLabelText("画面描述"), {
+    target: { value: "再次编辑" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存分镜文字与参数" }));
+  await waitFor(() => {
+    const writes = vi
+      .mocked(fetch)
+      .mock.calls.filter(([, init]) => init?.method === "PATCH");
+    expect(writes).toHaveLength(2);
+    expect(JSON.parse(String(writes[1]?.[1]?.body)).expected_version).toBe(2);
+  });
+});
