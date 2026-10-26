@@ -1,0 +1,32 @@
+{
+  "source_script": "清晨，小木站在木门前，抬手轻轻敲门，木头发出两声轻响。门打开后，小木挥手说：“早上好。”",
+  "model": "qwen3.8-27b-mlx@8bit",
+  "shots": [
+    {
+      "order_index": 1,
+      "raw_description": "清晨，小木站在木门前，轻敲两下后停手等待。",
+      "dialogue": "",
+      "character_ids": [
+        "robot"
+      ],
+      "image_prompt": "",
+      "video_prompt": "",
+      "audio_prompt": "Soft morning ambience with two light wooden knocks.",
+      "duration_seconds": 4.0,
+      "status": "DRAFT"
+    },
+    {
+      "order_index": 2,
+      "raw_description": "门打开后，小木挥手说早上好。",
+      "dialogue": "早上好。",
+      "character_ids": [
+        "robot"
+      ],
+      "image_prompt": "A small olive-green wooden robot with a square head and an orange scarf stands in the doorway of an open door, one arm raised in a waving gesture.",
+      "video_prompt": "In a locked-off shot, the wooden robot gently waves one hand in the open doorway. Preserve its square head and orange scarf. One continuous shot with no cuts.",
+      "audio_prompt": "Wooden door creaks open, followed by quiet morning ambience.",
+      "duration_seconds": 3.0,
+      "status": "READY"
+    }
+  ]
+}
