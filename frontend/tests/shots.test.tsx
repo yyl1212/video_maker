@@ -276,3 +276,80 @@ test("刷新旧选择快照不得撤回刚采用的首帧", async () => {
   expect(screen.queryByText("尚未采用首帧")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "取消首帧采用" })).toBeEnabled();
 });
+
+test("解析采纳后的自动刷新晚到时不得回退新镜头已保存的内容", async () => {
+  const parsed = { ...shot, id: 5, raw_description: "解析后的新画面" };
+  let shotReads = 0,
+    assetReads = 0;
+  let finishSlowAssets: ((response: Response) => void) | undefined;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (input, init) => {
+      const path = String(input);
+      if (path.endsWith("/bootstrap")) return Response.json({ token: "local" });
+      if (path.endsWith("/jobs/active"))
+        return Response.json({
+          task: null,
+          runtime_state: { state: "IDLE", version: 1, active_task_id: null },
+        });
+      if (path.includes("/jobs?limit=")) return Response.json([]);
+      if (path.endsWith("/episodes/2/shots")) {
+        shotReads++;
+        return Response.json(
+          shotReads === 1
+            ? { episode_version: 2, shots: [shot] }
+            : { episode_version: 3, shots: [parsed] },
+        );
+      }
+      if (path.endsWith("/projects/1/assets")) {
+        assetReads++;
+        return assetReads === 2
+          ? new Promise<Response>((resolve) => {
+              finishSlowAssets = resolve;
+            })
+          : Response.json(assetReads > 2 ? [image] : []);
+      }
+      if (path.endsWith("/shots/5") && init?.method === "PATCH")
+        return Response.json({
+          ...parsed,
+          version: 2,
+          raw_description: "人工保存的新画面",
+        });
+      throw new Error(`unexpected ${path}`);
+    }),
+  );
+  const view = render(
+    <ShotList
+      project={project}
+      episodeId={2}
+      readonly={false}
+      refreshRevision={0}
+    />,
+  );
+  await screen.findByLabelText("画面描述");
+  view.rerender(
+    <ShotList
+      project={project}
+      episodeId={2}
+      readonly={false}
+      refreshRevision={1}
+    />,
+  );
+  await waitFor(() => expect(assetReads).toBe(2));
+  fireEvent.click(screen.getByRole("button", { name: "刷新素材与分镜" }));
+  await waitFor(() =>
+    expect(screen.getByLabelText("画面描述")).toHaveValue("解析后的新画面"),
+  );
+  fireEvent.change(screen.getByLabelText("画面描述"), {
+    target: { value: "人工保存的新画面" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "保存分镜文字与参数" }));
+  await waitFor(() => expect(screen.getByText("版本 2")).toBeVisible());
+  expect(screen.getByRole("checkbox", { name: "参考 原创角色" })).toBeVisible();
+  await act(async () => {
+    finishSlowAssets?.(Response.json([]));
+  });
+  expect(screen.getByLabelText("画面描述")).toHaveValue("人工保存的新画面");
+  expect(useWorkbenchStore.getState().drafts["shot:5"]).toBeUndefined();
+  expect(screen.getByRole("checkbox", { name: "参考 原创角色" })).toBeVisible();
+});

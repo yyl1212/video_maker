@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   apiRequest,
   type AssetRead,
@@ -57,6 +57,7 @@ export function ShotList({
   const [selected, setSelected] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [initialError, setInitialError] = useState("");
+  const latestRead = useRef(0);
   const drafts = useWorkbenchStore((s) => s.drafts);
   const clearDraft = useWorkbenchStore((s) => s.clearDraft);
   const dirty = Object.entries(drafts).some(
@@ -81,6 +82,7 @@ export function ShotList({
   );
   useEffect(() => {
     const controller = new AbortController();
+    const sequence = ++latestRead.current;
     Promise.all([
       apiRequest<ShotListRead>(`/episodes/${episodeId}/shots`, {
         signal: controller.signal,
@@ -90,8 +92,8 @@ export function ShotList({
       }),
     ])
       .then(([s, a]) => {
-        if (!controller.signal.aborted) {
-          setListing(s);
+        if (!controller.signal.aborted && sequence === latestRead.current) {
+          setListing((current) => mergeSnapshot(current, s));
           setAssets(a);
         }
       })
@@ -117,6 +119,8 @@ export function ShotList({
     );
   }
   async function reload(signal: AbortSignal) {
+    // 手工刷新或写入后的读取优先，旧自动刷新也不能回退素材列表。
+    latestRead.current += 1;
     return apiRequest<ShotListRead>(`/episodes/${episodeId}/shots`, { signal });
   }
   function move(index: number, offset: number) {
