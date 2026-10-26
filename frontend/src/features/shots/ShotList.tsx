@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   apiRequest,
   type AssetRead,
@@ -15,6 +15,7 @@ import { VideoGenerationPanel } from "./VideoGenerationPanel";
 import { ImageGenerationPanel } from "./ImageGenerationPanel";
 import { ShotEditor } from "./ShotEditor";
 import { ReferencePicker } from "./ReferencePicker";
+import { PromptAssistant } from "@/features/storyboards/PromptAssistant";
 import { SelectionPanel } from "./SelectionPanel";
 
 function mergeSnapshot(
@@ -43,17 +44,20 @@ export function ShotList({
   episodeId,
   readonly,
   onEpisodeChanged,
+  refreshRevision = 0,
 }: {
   project: ProjectRead;
   episodeId: number;
   readonly: boolean;
   onEpisodeChanged?: () => void;
+  refreshRevision?: number;
 }) {
   const [listing, setListing] = useState<ShotListRead | null>(null);
   const [assets, setAssets] = useState<AssetRead[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [initialError, setInitialError] = useState("");
+  const latestRead = useRef(0);
   const drafts = useWorkbenchStore((s) => s.drafts);
   const clearDraft = useWorkbenchStore((s) => s.clearDraft);
   const dirty = Object.entries(drafts).some(
@@ -78,6 +82,7 @@ export function ShotList({
   );
   useEffect(() => {
     const controller = new AbortController();
+    const sequence = ++latestRead.current;
     Promise.all([
       apiRequest<ShotListRead>(`/episodes/${episodeId}/shots`, {
         signal: controller.signal,
@@ -87,8 +92,8 @@ export function ShotList({
       }),
     ])
       .then(([s, a]) => {
-        if (!controller.signal.aborted) {
-          setListing(s);
+        if (!controller.signal.aborted && sequence === latestRead.current) {
+          setListing((current) => mergeSnapshot(current, s));
           setAssets(a);
         }
       })
@@ -99,7 +104,7 @@ export function ShotList({
           );
       });
     return () => controller.abort();
-  }, [episodeId, project.id]);
+  }, [episodeId, project.id, refreshRevision]);
   const busy = action.pending || refresh.pending;
   const active =
     listing?.shots.find((s) => s.id === selected) ?? listing?.shots[0];
@@ -114,6 +119,8 @@ export function ShotList({
     );
   }
   async function reload(signal: AbortSignal) {
+    // 手工刷新或写入后的读取优先，旧自动刷新也不能回退素材列表。
+    latestRead.current += 1;
     return apiRequest<ShotListRead>(`/episodes/${episodeId}/shots`, { signal });
   }
   function move(index: number, offset: number) {
@@ -263,6 +270,12 @@ export function ShotList({
                 shot={{ ...active, read_only: readonly || active.read_only }}
                 project={project}
                 onSaved={saved}
+              />
+              <PromptAssistant
+                project={project}
+                episodeVersion={listing.episode_version}
+                shot={{ ...active, read_only: readonly || active.read_only }}
+                onApplied={saved}
               />
               <ReferencePicker
                 key={`refs:${active.id}`}

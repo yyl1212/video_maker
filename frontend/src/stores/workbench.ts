@@ -39,8 +39,20 @@ export type ExportDraft = {
   baseVersion: number;
   dirty: boolean;
 };
+export type AIReviewDraft = {
+  kind: "ai-review";
+  value: components["schemas"]["DraftRead"]["value"];
+  baseVersion: number;
+  dirty: boolean;
+};
+
 type EditorDraft =
-  ProjectDraft | EpisodeDraft | ShotDraft | ReferenceDraft | ExportDraft;
+  | ProjectDraft
+  | EpisodeDraft
+  | ShotDraft
+  | ReferenceDraft
+  | ExportDraft
+  | AIReviewDraft;
 type WorkbenchState = {
   drafts: Record<string, EditorDraft>;
   setDraft: (key: string, draft: EditorDraft) => void;

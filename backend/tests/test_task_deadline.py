@@ -144,3 +144,27 @@ def test_owned_subprocess_is_stopped_at_task_deadline(engine):
     with pytest.raises(ProcessLookupError):
         os.kill(local["identity"]["pid"], 0)
     assert service.active().runtime_state.state == "IDLE"
+
+
+def test_cancelled_io_stays_cancelled_when_inflight_thread_raises(engine):
+    import threading
+
+    service, _, _ = engine
+    entered, release = threading.Event(), threading.Event()
+
+    def failing_write():
+        entered.set()
+        assert release.wait(timeout=2)
+        raise AppError(409, "TASK_NOT_RUNNING", "任务已结束")
+
+    async def run():
+        operation = asyncio.create_task(service.runner.io(failing_write))
+        while not entered.is_set():
+            await asyncio.sleep(0.001)
+        operation.cancel()
+        release.set()
+        # 原取消信号不能被收尾线程的AppError替换，否则心跳会吞掉它继续循环。
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(operation, 0.5)
+
+    asyncio.run(run())

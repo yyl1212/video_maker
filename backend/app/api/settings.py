@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Request
 
 from app.clients.drawthings import DrawThingsBackend, ImageConnectionRead
+from app.clients.llm import LLMClient, TextConnectionRead
 from app.clients.minimax_h3 import MiniMaxH3Backend, VideoConnectionRead
 from app.errors import AppError, BackendError
 from app.models import ModelSettings
 from app.schemas.clients import SettingsRead, SettingsUpdate
 from app.schemas.generation import ConnectionTest, VideoConnectionTest
+from app.schemas.storyboards import TextConnectionTest
 from app.services.projects import check_version
 
 router = APIRouter(tags=["settings"])
@@ -51,5 +53,13 @@ async def test_connection(data: ConnectionTest):
 async def test_video_connection(data: VideoConnectionTest):
     try:
         return await MiniMaxH3Backend().test_connection(data.video)
+    except BackendError as exc:
+        raise AppError(503, exc.code, exc.message) from exc
+
+
+@router.post("/settings/test-text-connection", response_model=TextConnectionRead)
+async def test_text_connection(data: TextConnectionTest):
+    try:
+        return await LLMClient().test_connection(data.text)
     except BackendError as exc:
         raise AppError(503, exc.code, exc.message) from exc

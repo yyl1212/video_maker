@@ -58,7 +58,7 @@ export default function RootLayout({
               {children}
             </main>
             <div className="app-footer">
-              映序 · 留住故事的每一个起点<span>M7 · 本机成片导出</span>
+              映序 · 留住故事的每一个起点<span>M4 · 剧本与Prompt辅助</span>
             </div>
           </div>
         </div>

@@ -31,6 +31,7 @@ from .services.exports import ExportHandler
 from .services.generation import ImageGenerationHandler, VideoGenerationHandler
 from .services.recovery import RecoveryService, WorkspaceLock
 from .services.storage import StorageService
+from .services.storyboards import StoryboardHandler, StoryboardService
 from .services.tasks import TaskService
 from .upload_limit import UploadBodyLimit, is_upload_request
 
@@ -59,6 +60,7 @@ def create_app(
             app.state.database = database
             app.state.storage = StorageService(config.data_dir)
             app.state.export_service = ExportHandler(database, app.state.storage)
+            app.state.storyboards = StoryboardService(database, app.state.storage)
             task_service = app.state.task_service = TaskService(
                 database,
                 app.state.storage,
@@ -67,6 +69,12 @@ def create_app(
                         "IMAGE": ImageGenerationHandler(database, app.state.storage),
                         "VIDEO": VideoGenerationHandler(database, app.state.storage),
                         "EXPORT": app.state.export_service,
+                        "PARSE_SCRIPT": StoryboardHandler(
+                            "PARSE_SCRIPT", database, app.state.storage
+                        ),
+                        "OPTIMIZE_PROMPTS": StoryboardHandler(
+                            "OPTIMIZE_PROMPTS", database, app.state.storage
+                        ),
                     }
                     if task_handlers is None
                     else task_handlers

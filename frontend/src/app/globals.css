@@ -1228,3 +1228,36 @@ summary {
     padding: 18px;
   }
 }
+.text-assistant {
+  margin-top: 24px;
+}
+.text-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.draft-review {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.ai-draft-shot {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  margin: 16px 0;
+}
+.draft-review fieldset > .checkbox-label {
+  margin: 18px 0;
+}
+.draft-review fieldset > .button {
+  margin-top: 16px;
+}
+.text-settings {
+  max-width: 720px;
+  margin-top: 20px;
+}
+.text-settings .button-row {
+  margin-top: 18px;
+}

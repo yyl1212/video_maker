@@ -162,6 +162,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/settings/test-text-connection": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Test Text Connection */
+    post: operations["test_text_connection_api_v1_settings_test_text_connection_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/projects/{project_id}/assets": {
     parameters: {
       query?: never;
@@ -405,6 +422,74 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/episodes/{episode_id}/parse-jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Parse Script Job */
+    post: operations["parse_script_job_api_v1_episodes__episode_id__parse_jobs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shots/{shot_id}/prompt-jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Prompt Job */
+    post: operations["prompt_job_api_v1_shots__shot_id__prompt_jobs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{task_id}/draft": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Draft */
+    get: operations["draft_api_v1_jobs__task_id__draft_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/jobs/{task_id}/apply": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Apply Draft */
+    post: operations["apply_draft_api_v1_jobs__task_id__apply_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/runtime": {
     parameters: {
       query?: never;
@@ -610,7 +695,7 @@ export interface components {
       version: string;
       /**
        * Module
-       * @default M7
+       * @default M4
        */
       module: string;
       /**
@@ -672,6 +757,69 @@ export interface components {
     DeleteAsset: {
       /** Expected Version */
       expected_version: number;
+    };
+    /** DraftApply */
+    DraftApply: {
+      /** Project Id */
+      project_id: number;
+      /** Expected Version */
+      expected_version: number;
+      /** Edited Value */
+      edited_value:
+        | components["schemas"]["StoryboardDraft"]
+        | components["schemas"]["PromptDraft"];
+      /**
+       * Replace Confirm
+       * @default false
+       */
+      replace_confirm: boolean;
+    };
+    /** DraftRead */
+    DraftRead: {
+      /** Task Id */
+      task_id: number;
+      /** Project Id */
+      project_id: number;
+      /** Episode Id */
+      episode_id: number;
+      /** Shot Id */
+      shot_id: number | null;
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "PARSE_SCRIPT" | "OPTIMIZE_PROMPTS";
+      /** Value */
+      value:
+        | components["schemas"]["StoryboardDraft"]
+        | components["schemas"]["PromptDraft"];
+      /** Expected Version */
+      expected_version: number;
+      /** Characters */
+      characters: components["schemas"]["Character"][];
+      /** Existing Shot Ids */
+      existing_shot_ids: number[];
+      /** Applied At */
+      applied_at: string | null;
+      /** Apply Allowed */
+      apply_allowed: boolean;
+      /** Conflict Reason */
+      conflict_reason: string | null;
+    };
+    /** DraftShot */
+    DraftShot: {
+      /** Order Index */
+      order_index: number;
+      /** Raw Description */
+      raw_description: string;
+      /** Dialogue */
+      dialogue: string;
+      /** Character Ids */
+      character_ids: string[];
+      /** Audio Prompt */
+      audio_prompt: string;
+      /** Duration Seconds */
+      duration_seconds: number;
     };
     /** EpisodeCreate */
     EpisodeCreate: {
@@ -820,7 +968,7 @@ export interface components {
       status: string;
       /**
        * Module
-       * @default M7
+       * @default M4
        */
       module: string;
     };
@@ -967,6 +1115,15 @@ export interface components {
       characters: components["schemas"]["Character"][];
       /** Archived At */
       archived_at: string | null;
+    };
+    /** PromptDraft */
+    PromptDraft: {
+      /** Image Prompt */
+      image_prompt: string;
+      /** Video Prompt */
+      video_prompt: string;
+      /** Audio Prompt */
+      audio_prompt: string;
     };
     /** ReferenceInput */
     ReferenceInput: {
@@ -1281,6 +1438,11 @@ export interface components {
       /** Seed */
       seed?: number | null;
     };
+    /** StoryboardDraft */
+    StoryboardDraft: {
+      /** Shots */
+      shots: components["schemas"]["DraftShot"][];
+    };
     /** TaskAccepted */
     TaskAccepted: {
       /** Job Id */
@@ -1398,6 +1560,34 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+    };
+    /** TextConnectionRead */
+    TextConnectionRead: {
+      /** Models */
+      models: string[];
+      /**
+       * Message
+       * @default 已连接本机文本服务；仅读取模型列表，未生成内容
+       */
+      message: string;
+    };
+    /** TextConnectionTest */
+    TextConnectionTest: {
+      text: components["schemas"]["TextSettings"];
+    };
+    /** TextJobSubmit */
+    TextJobSubmit: {
+      /**
+       * Idempotency Key
+       * Format: uuid
+       */
+      idempotency_key: string;
+      /** Expected Project Version */
+      expected_project_version: number;
+      /** Expected Episode Version */
+      expected_episode_version: number;
+      /** Expected Shot Version */
+      expected_shot_version?: number | null;
     };
     /** TextSettings */
     TextSettings: {
@@ -2848,6 +3038,111 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["VideoConnectionRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  test_text_connection_api_v1_settings_test_text_connection_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextConnectionTest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TextConnectionRead"];
         };
       };
       /** @description Forbidden */
@@ -4854,6 +5149,434 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["TaskRead"][];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  parse_script_job_api_v1_episodes__episode_id__parse_jobs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        episode_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextJobSubmit"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskAccepted"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  prompt_job_api_v1_shots__shot_id__prompt_jobs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        shot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TextJobSubmit"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TaskAccepted"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  draft_api_v1_jobs__task_id__draft_get: {
+    parameters: {
+      query: {
+        project_id: number;
+      };
+      header?: never;
+      path: {
+        task_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DraftRead"];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Content Too Large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unsupported Media Type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Unprocessable Content */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Internal Server Error */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ErrorRead"];
+        };
+      };
+    };
+  };
+  apply_draft_api_v1_jobs__task_id__apply_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        task_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DraftApply"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json":
+            | components["schemas"]["EpisodeRead"]
+            | components["schemas"]["ShotRead"];
         };
       };
       /** @description Forbidden */
