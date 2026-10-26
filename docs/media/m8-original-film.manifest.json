@@ -1,0 +1,61 @@
+{
+  "clips": [
+    {
+      "asset_id": 3,
+      "audio_channels": 2,
+      "audio_sample_rate": 48000,
+      "confirmed_stale": false,
+      "description": "清晨的木工桌上，橄榄绿色木制小机器人小木面对镜头，缓缓抬起右手，轻轻挥动一次。",
+      "frame_count": 22,
+      "frozen_path": "/Users/wiw/Project/MyProject/video_maker/.superpowers/m8-preview-data/task-inputs/5/00-3.mp4",
+      "has_audio": true,
+      "image_input_hash": "45318a8fc9f69165383a4f6808b77e3e76fae3c8cc31648bfa43a2c47b1609e1",
+      "name": "有声片段 · 任务4",
+      "normalized_duration": 0.9166666666666666,
+      "order_index": 1,
+      "position": 0,
+      "review_stamp": "89adb99ca705fc79a753d70735bf40d66f8fb3d3e624ea50699f33168f01bac6",
+      "selection_version": 3,
+      "sha256": "279490f9fb785f289e230c8be91050fd3c039582e78e7e1bbbaea613810f62ea",
+      "shot_id": 1,
+      "shot_version": 4,
+      "source_duration": 0.916667,
+      "source_task_id": 4,
+      "stale": false,
+      "stale_reasons": [],
+      "video_input_hash": "9c4ccddd67398ee0f4b49c3e827206d7e4fc623732438fe1d2398d28364631ea"
+    }
+  ],
+  "created_at": "2026-10-26T03:13:44.476665+00:00",
+  "episode_id": 1,
+  "episode_title": "第一集 · 一次挥手",
+  "episode_version": 2,
+  "input_hash": "1ae66c4b8f6263f7d8b1217f458b90dbf7ea805d2143c02b385ac7a86e5a2d0a",
+  "output": {
+    "audio_channels": 2,
+    "audio_sample_rate": 48000,
+    "duration_seconds": 0.916667,
+    "file_path": "/Users/wiw/Project/MyProject/video_maker/.superpowers/m8-preview-data/media/1/ed1e8b47ce0649f48a538e8ca78274d3.mp4",
+    "has_audio": true,
+    "height": 1280,
+    "sha256": "ea78371ddc2fc3ac1b0ab10171fc7deb1a1aadd9e1177f83fb66be72b7463fb4",
+    "size_bytes": 188266,
+    "width": 720
+  },
+  "profile": {
+    "audio_channels": 2,
+    "audio_codec": "aac",
+    "audio_sample_rate": 48000,
+    "fps": 24,
+    "height": 1280,
+    "name": "portrait",
+    "pixel_format": "yuv420p",
+    "version": "export-av-v1",
+    "video_codec": "h264",
+    "width": 720
+  },
+  "project_id": 1,
+  "project_name": "小木的问候 · M8原创整体验收",
+  "project_version": 1,
+  "task_id": 5
+}

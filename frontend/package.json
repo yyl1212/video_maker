@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "api:types": "openapi-typescript ./openapi.json -o src/lib/api-types.ts && prettier --write src/lib/api-types.ts",
-    "format:check": "prettier --check src tests next.config.ts vitest.config.ts postcss.config.mjs eslint.config.mjs tsconfig.json package.json"
+    "format:check": "prettier --check src tests next.config.ts vitest.config.ts playwright.config.ts postcss.config.mjs eslint.config.mjs tsconfig.json package.json",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "next": "16.4.3",
@@ -22,6 +23,7 @@
     "zustand": "5.0.16"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",

@@ -695,7 +695,7 @@ export interface components {
       version: string;
       /**
        * Module
-       * @default M4
+       * @default M8
        */
       module: string;
       /**
@@ -968,7 +968,7 @@ export interface components {
       status: string;
       /**
        * Module
-       * @default M4
+       * @default M8
        */
       module: string;
     };

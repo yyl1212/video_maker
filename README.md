@@ -2,34 +2,25 @@
 
 面向 Apple Silicon Mac 的单机、单用户制作工作台。使用本机 LLM 解析剧本、Draw Things 生成首帧、MiniMax-H3 同时生成视频和声音，最后用本地 FFmpeg 拼接 MP4。
 
-当前交付 **M4：本地 LLM 剧本解析与 Prompt 扩写**。M1/M3/M2/M5/M6/M7已获验收。现在可由已保存剧本生成可编辑分镜草稿、为单镜扩写三类Prompt，并在核对来源后明确采纳。M4待用户验收，下一项为M8整体验收与交付。
+当前交付 **M8：整体验收与首版交付**。M1～M7均已获验收，完整创作链路已实现；M8完成回归和真实模型分项演示后等待用户验收。进度与证据见[整体验收记录](docs/验收记录.md)。
 
 ## 本机启动
 
-需要Python 3.13、uv、Node.js 24，以及PATH中可用的FFmpeg和ffprobe（视频核验与缩略图使用）。先在仓库根目录复制配置：
+需要Python 3.13、uv、Node.js 24、FFmpeg和ffprobe。首次在仓库根目录准备：
 
 ```bash
 cp .env.example .env
+(cd backend && uv sync --locked)
+(cd frontend && npm ci)
+./scripts/start-local.sh --check
+./scripts/start-local.sh --build
 ```
 
-终端一启动后端：
+打开 [本机工作台](http://127.0.0.1:3000)。已有生产构建时使用`./scripts/start-local.sh`；在启动终端按Ctrl+C停止本次前后端。脚本解析.env而不执行其中的shell文本，固定8000/3000端口，不检测内存，不启动或停止模型。模型服务由用户自行准备。实际制作使用生产构建，不开热重载或多worker。
 
-```bash
-cd backend
-uv sync --locked
-uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --env-file ../.env
-```
+完整说明：[本机运行、停止、备份与原路径恢复](docs/本机运行与备份.md)。本版数据库保存绝对路径，停机备份整个数据目录，恢复时回到原VM_DATA_DIR绝对路径。
 
-终端二启动前端：
-
-```bash
-cd frontend
-npm ci
-npm run build
-npm run start
-```
-
-打开 [本机工作台](http://127.0.0.1:3000)。两个终端均用 Ctrl+C 停止。开发页面可用 `npm run dev`；实际制作采用生产构建。端口如需调整，前端转发地址使用 `VM_BACKEND_URL`，后端允许的前端来源使用 `VM_FRONTEND_ORIGINS` JSON 数组配置。
+需要分别调试服务时，在backend运行`uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --env-file ../.env`，在frontend运行`npm run dev`。手动生产启动使用`npm run build`后`npm run start`。自定义端口时同步VM_BACKEND_URL和VM_FRONTEND_ORIGINS；Next转发地址在构建时读取，改变后须重新构建。
 
 文本辅助前，在剧集的“文本模型连接与配置”中填写本机OpenAI兼容服务地址（默认1234）并检查连接、选择模型后保存；检查只读模型列表。已实测 `qwen3.8-27b-mlx@8bit`。模型正文须为完整严格JSON；正文为空时，仅旧已验证别名 `qwen3.8-27b-mlx` 与上述精确8bit ID允许整体解析reasoning_content，不截取思考文本，不向4bit或其他模型泛化。
 
@@ -53,11 +44,13 @@ H3的RGB8/PCM s16le经过校验并封装为H.264/AAC MP4；缺失音频或音画
 
 ```bash
 python3 scripts/run-check.py --cwd backend -- uv run pytest -q
-python3 scripts/run-check.py --cwd backend -- uv run ruff check app tests migrations ../scripts
+python3 scripts/run-check.py -- backend/.venv/bin/ruff check --config backend/pyproject.toml backend scripts
 python3 scripts/run-check.py --cwd frontend -- npm test
 python3 scripts/run-check.py --cwd frontend -- npm run typecheck
 python3 scripts/run-check.py --cwd frontend -- npm run lint
 python3 scripts/run-check.py --cwd frontend -- npm run build
+(cd frontend && npx playwright install chromium)
+python3 scripts/run-check.py --cwd frontend -- npm run test:e2e
 ```
 
 两个服务运行时，可额外验证真实代理链的本机来源边界：
@@ -79,12 +72,15 @@ python3 scripts/run-check.py -- backend/.venv/bin/python scripts/check-media-wor
 ```bash
 backend/.venv/bin/python scripts/export-openapi.py
 npm run api:types --prefix frontend
+backend/.venv/bin/python scripts/export-openapi.py --check
 ```
 
-后端导入和契约生成不会创建数据库；只在服务启动时迁移和初始化。`data/`、`.env`及测试临时文件不进入Git；备份前停止服务，再复制完整`data/`目录。资产恢复到新绝对路径的工具留待后续。
+后端导入和契约生成不会创建数据库；只在服务启动时迁移和初始化。`data/`、`.env`及测试临时文件不进入Git。Playwright需8000/3000空闲，测试工厂使用独立临时空库；不会复用或停止已有服务。资产恢复到新绝对路径的工具留待后续。
 
 ## 设计与进度
 
+- [M8 整体验收与交付记录](docs/验收记录.md)
+- [本机运行与备份说明](docs/本机运行与备份.md)
 - [完整产品、架构与数据模型设计](docs/superpowers/specs/2026-10-25-local-video-platform-design.md)
 - [分阶段开发计划与验收标准](docs/superpowers/plans/2026-10-25-local-video-platform.md)
 - [敏捷迭代、待办和当前进度](docs/superpowers/plans/2026-10-25-agile-delivery.md)
@@ -98,4 +94,4 @@ npm run api:types --prefix frontend
 
 已确认边界：从空数据开始、不迁移旧 DrawThings 数据；可复用已验证的模型接入协议；全局单任务、BackgroundTasks 后台执行、轮询进度；不依赖云服务，不做内存检测，不自动卸载或恢复其他模型。
 
-每次只实施用户指定的一个阶段，代码审查和回归验收后，等待确认再继续。
+M8待用户整体验收；合并、发布及新增需求由用户另行决定。

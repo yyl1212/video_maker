@@ -5875,7 +5875,7 @@
           "module": {
             "type": "string",
             "title": "Module",
-            "default": "M4"
+            "default": "M8"
           },
           "capabilities": {
             "$ref": "#/components/schemas/Capabilities",
@@ -6593,7 +6593,7 @@
           "module": {
             "type": "string",
             "title": "Module",
-            "default": "M4"
+            "default": "M8"
           }
         },
         "type": "object",
